@@ -1,0 +1,22 @@
+# Secrets and local config
+.env
+.env.*
+!.env.example
+
+# Local databases (may contain real medical data)
+*.db
+*.sqlite
+*.sqlite3
+
+# Dependencies and build output
+node_modules/
+dist/
+build/
+coverage/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log
