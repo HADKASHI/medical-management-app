@@ -90,7 +90,7 @@ A medication's schedule. Editing a schedule **ends the current version and start
 | taken_at | timestamptz, null | |
 | status_changed_at | timestamptz | |
 
-Moving into or out of `taken` (including a late fix from `missed`) changes `stock_items.quantity` by `amount`. A Dose becomes `missed` when its confirmation window passes; the window length is set under **Alert rules**.
+Moving into or out of `taken` (including a late fix from `missed`) changes `stock_items.quantity` by `amount`. A Dose becomes `missed` when its confirmation window passes; the window is set in [alert-rules.md](alert-rules.md): the earlier of 24 hours after `due_at` or the next Dose of the same Stock Item.
 
 ## Authorizations
 

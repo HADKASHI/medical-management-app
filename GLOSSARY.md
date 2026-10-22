@@ -53,8 +53,12 @@ One due or logged intake of a medication, with an amount and a status: *pending*
 _Avoid_: Intake, administration
 
 **Missed**:
-A **Dose** not confirmed within its confirmation window; it can still be changed to *taken* later.
+A **Dose** not confirmed within its **Confirmation Window**; it can still be changed to *taken* later.
 _Avoid_: Overdue, forgotten
+
+**Confirmation Window**:
+How long a *pending* **Dose** waits to be confirmed before it becomes **Missed**.
+_Avoid_: Grace period, timeout
 
 ### Authorizations
 
@@ -95,3 +99,21 @@ _Avoid_: Notes (for this specific meaning)
 **Work Calendar Invite**:
 The neutral-titled calendar invitation the app emails to the owner's work address so an **Appointment** blocks their time.
 _Avoid_: Sync, Outlook event
+
+### Alerts
+
+**Reminder**:
+A notification at a set time about something to do now: a **Dose** that is due, or an **Appointment** coming up.
+_Avoid_: Alert (for this meaning), notification
+
+**Alert**:
+A condition that needs attention and lasts until it is fixed: a **Stock Item** at or below its **Low-Stock Threshold**, or an **Authorization** expiring or expired.
+_Avoid_: Warning, Reminder (for this meaning)
+
+**Snooze**:
+Putting off a due **Dose**'s **Reminder** for a fixed time; only **Doses** can be snoozed.
+_Avoid_: Postpone, delay
+
+**Daily Alert Time**:
+The one time of day at which the app sends its non-urgent notifications, such as low stock and expiring **Authorizations**.
+_Avoid_: Digest time, notification time
