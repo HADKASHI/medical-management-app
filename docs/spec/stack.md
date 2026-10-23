@@ -51,7 +51,7 @@ flowchart LR
 | Push | Web Push with VAPID via `@negrel/webpush` in an Edge Function; Declarative Web Push payloads |
 | Invite email | Resend HTTP API; Mailgun (raw MIME) as fallback |
 | Domain | One `.com` at Cloudflare Registrar |
-| Auth | Supabase email + password, sign-up disabled, no MFA in v1 |
+| Auth | Supabase email + password + enforced TOTP MFA (RLS `aal2`), sign-up disabled |
 | Keepalive | Per-minute heartbeat row + daily Cloudflare Worker check ([ADR 0003](../adr/0003-supabase-free-with-external-keepalive.md)) |
 | Monitoring | Outbox failure tracking + in-app banner; Supabase logs; no Sentry |
 | Repo | One repo, one package; pnpm, Node LTS |
@@ -115,7 +115,7 @@ Not part of the domain model; owned by the stack.
 | VAPID private key, Resend API key | Supabase Edge Function secrets |
 | VAPID public key, Supabase URL, anon key | frontend build-time env vars (public by design) |
 | Supabase access token, Cloudflare API token | GitHub Actions secrets |
-| Keepalive Worker's Supabase key and Resend key | Cloudflare Worker secrets |
+| Keepalive Worker's Supabase anon key (no service key) and Resend key | Cloudflare Worker secrets |
 
 Supabase Vault is not used: with Graph ruled out there are no runtime-issued tokens to store.
 
@@ -125,7 +125,7 @@ Supabase Vault is not used: with Graph ruled out there are no runtime-issued tok
 - Every table has RLS policies allowing only the owner's `auth.uid()`.
 - Long-lived sessions (refresh token in the PWA's storage). Password reset by email is the recovery path. The password lives in iCloud Keychain.
 - No magic links: on iPhone the link opens in Safari, which does not share storage with the Home Screen app.
-- No TOTP / MFA in v1; Supabase supports it if wanted later.
+- **TOTP MFA is enforced** through a restrictive RLS `aal2` policy on every table; see [privacy-security.md](privacy-security.md).
 
 ## Keepalive and monitoring
 
@@ -189,3 +189,5 @@ To do by the owner before or at the start of the build. Nothing here has been bo
 6. **GitHub:** add the Supabase access token and Cloudflare API token as Actions secrets.
 7. **VAPID keys:** generate a key pair; put the private key in Supabase function secrets and the public key in the frontend env.
 8. **Work Outlook:** keep the Copilot calendar instruction scoped to the app's sender address (ADR 0001).
+9. **2FA everywhere:** turn on 2FA for Supabase, GitHub, Cloudflare, Resend and the personal email used for password reset; enroll two TOTP factors in the app (one kept offline); set iOS Show Previews to When Unlocked for the app ([privacy-security.md](privacy-security.md)).
+10. **GitHub:** turn on secret scanning and push protection for the repo.
