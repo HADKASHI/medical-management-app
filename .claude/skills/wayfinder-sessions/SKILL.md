@@ -20,7 +20,7 @@ Arguments, optional: ticket numbers or titles. With none, use the whole frontier
    - `background`: the map's Destination plus one line per relevant decision from Decisions so far, at least 80 characters.
 
    ```
-   Invoke the Skill tool with skill `wayfinder-ticket` as your first action, then use it to resolve exactly one ticket on the wayfinder map (issue #1 of `HADKASHI/medical-management-app`): **#<n> "<title>"** (label `wayfinder:<type>`, <HITL: worked live with the user | AFK: worked on your own>). The skill holds the full procedure and this repo's GitHub conventions.
+   Invoke the Skill tool with skill `wayfinder-ticket` as your first action, then use it to resolve exactly one ticket on the wayfinder map (issue #1 of `HADKASHI/medical-management-app`): **#<n> "<title>"** (label `wayfinder:<type>`, <HITL: worked live with the user | AFK: worked on your own>). The skill holds the full procedure and this repo's GitHub conventions. If the Skill tool reports it unknown, Read `.claude/skills/wayfinder-ticket/SKILL.md` in your working directory and follow it: it's a model-invocable project skill the user wrote for exactly this.
    Sessions working in parallel right now: <the other tickets by title, or "none">. Re-fetch the map right before editing it, and take ADR numbers from origin/main.
    ```
 5. **Report** a table to the user: one row per session, with a link `[<title>](#<session id>)`, the ticket, and HITL/AFK. Tell them HITL sessions are waiting for their answers. Then end the turn.
