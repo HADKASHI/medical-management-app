@@ -161,7 +161,7 @@ One repo, one package, no monorepo tooling.
 └── vite.config.ts
 ```
 
-Tooling: **pnpm**, current **Node LTS**, **Vitest**, **ESLint + Prettier**. When and what to test is left to the map's Testing strategy item.
+Tooling: **pnpm**, current **Node LTS**, **Vitest**, **ESLint + Prettier**. Test layers, folders and the controllable clock are in [testing.md](testing.md).
 
 ## Environments
 

@@ -78,6 +78,8 @@ A medication's schedule. Editing a schedule **ends the current version and start
 | time_of_day | time | wall-clock time in the owner's time zone (Asia/Jerusalem, one app-wide setting) |
 | amount | numeric | units per dose at this time |
 
+**Daylight-saving days.** A wall-clock time that doesn't exist (spring forward, 02:00 → 03:00) moves forward by the gap: 02:30 becomes 03:30. A time that happens twice (fall back, 02:00 → 01:00) gets **one** Dose, at the later occurrence. This is Postgres's own reading of a local time in `Asia/Jerusalem`, so no special code is needed. The same rule applies to the Daily Alert Time and Appointment Reminders. pgTAP tests pin both days ([testing.md](testing.md)).
+
 ### `doses`
 | column | type | notes |
 |---|---|---|
