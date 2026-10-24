@@ -136,7 +136,7 @@ Status is derived: *cancelled* if `cancelled_at` is set, otherwise *done* once `
 
 ## History and reports
 
-There is no generic history-log table. Reports read the records themselves:
+There is no generic history-log table. Reports read the records themselves (what each report shows is in [reports.md](reports.md)):
 - **Dose history** from `doses`
 - **Previous renewals** from the `authorizations` renewal chain and from `restocks`
 - **Visit summaries** from past `appointments`
