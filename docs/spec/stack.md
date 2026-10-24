@@ -54,6 +54,7 @@ flowchart LR
 | Auth | Supabase email + password + enforced TOTP MFA (RLS `aal2`), sign-up disabled |
 | Keepalive | Per-minute heartbeat row + daily Cloudflare Worker check ([ADR 0003](../adr/0003-supabase-free-with-external-keepalive.md)) |
 | Monitoring | Outbox failure tracking + in-app banner; Supabase logs; no Sentry |
+| Backups | Daily encrypted `supabase db dump` from a separate private repo ([backups-export.md](backups-export.md)) |
 | Repo | One repo, one package; pnpm, Node LTS |
 | Tooling | Vitest, ESLint, Prettier |
 | Environments | Local Supabase CLI stack (Docker) + one hosted production project |
@@ -93,6 +94,7 @@ Not part of the domain model; owned by the stack.
 | `push_subscriptions` | one row per installed device/browser: endpoint, keys, user agent label, created/last-success timestamps |
 | `outbox` | pending outbound messages: kind (`push` / `invite`), payload, status, attempts, last error, timestamps |
 | `heartbeat` | single row updated by the per-minute job; read by the keepalive Worker |
+| `backup_status` | single row with `last_backup_at`, set by the backup job; drives the "Backup overdue" banner ([backups-export.md](backups-export.md)) |
 
 ### Push
 
@@ -116,6 +118,7 @@ Not part of the domain model; owned by the stack.
 | VAPID public key, Supabase URL, anon key | frontend build-time env vars (public by design) |
 | Supabase access token, Cloudflare API token | GitHub Actions secrets |
 | Keepalive Worker's Supabase anon key (no service key) and Resend key | Cloudflare Worker secrets |
+| `SUPABASE_DB_URL` (`postgres`, session pooler) for backups | Actions secret in the private `medical-management-backups` repo only |
 
 Supabase Vault is not used: with Graph ruled out there are no runtime-issued tokens to store.
 
@@ -137,7 +140,7 @@ Free projects pause after 7 days of low activity, and a paused project silently 
 
 A scheduled GitHub Action is **not** used: GitHub disables scheduled workflows in repos with no activity for 60 days.
 
-**Monitoring:** no Sentry. Outbox rows track failures (attempts, last error); the app shows a **"Delivery problems"** banner when any push or invite has permanently failed. Everything else is read from the Supabase function logs.
+**Monitoring:** no Sentry. Outbox rows track failures (attempts, last error); the app shows a **"Delivery problems"** banner when any push or invite has permanently failed. Everything else is read from the Supabase function logs. A **"Backup overdue"** banner covers missed backups ([backups-export.md](backups-export.md#noticing-a-failure)).
 
 ## Repo layout
 
@@ -191,3 +194,4 @@ To do by the owner before or at the start of the build. Nothing here has been bo
 8. **Work Outlook:** keep the Copilot calendar instruction scoped to the app's sender address (ADR 0001).
 9. **2FA everywhere:** turn on 2FA for Supabase, GitHub, Cloudflare, Resend and the personal email used for password reset; enroll two TOTP factors in the app (one kept offline); set iOS Show Previews to When Unlocked for the app ([privacy-security.md](privacy-security.md)).
 10. **GitHub:** turn on secret scanning and push protection for the repo.
+11. **Backups:** create the private `medical-management-backups` repo, generate an age key pair (public key in that repo; private key in a password-manager note plus a printed copy), add `SUPABASE_DB_URL` there, and run the first restore drill at go-live ([backups-export.md](backups-export.md#owner-checklist)).

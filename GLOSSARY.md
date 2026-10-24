@@ -117,3 +117,13 @@ _Avoid_: Postpone, delay
 **Daily Alert Time**:
 The one time of day at which the app sends its non-urgent notifications, such as low stock and expiring **Authorizations**.
 _Avoid_: Digest time, notification time
+
+### Data
+
+**Backup**:
+A daily encrypted copy of all the owner's data, kept outside the app so it can be restored if the app's data is lost.
+_Avoid_: Snapshot, dump (for the general term)
+
+**Data Export**:
+A file of all the owner's records, downloaded from the app on demand.
+_Avoid_: Backup (for this meaning), report

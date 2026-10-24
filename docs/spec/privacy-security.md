@@ -1,6 +1,6 @@
 # Privacy and security
 
-Rules for holding the owner's medical data on a hosted service, decided in [Privacy and security rules](https://github.com/HADKASHI/medical-management-app/issues/14). They build on [stack.md](stack.md) and the facts in [What does Supabase Free provide for data protection and recovery?](https://github.com/HADKASHI/medical-management-app/issues/12). Backups and export are covered separately.
+Rules for holding the owner's medical data on a hosted service, decided in [Privacy and security rules](https://github.com/HADKASHI/medical-management-app/issues/14). They build on [stack.md](stack.md) and the facts in [What does Supabase Free provide for data protection and recovery?](https://github.com/HADKASHI/medical-management-app/issues/12). Backups and export are in [backups-export.md](backups-export.md).
 
 ## Data at rest
 
@@ -59,6 +59,7 @@ Rotate on any suspected leak, including a gitleaks or GitHub secret-scanning hit
 | Resend API key | create a new key in Resend, update the Edge Function and Worker secrets, revoke the old one |
 | VAPID key pair | generate a new pair, update both secret and frontend env, delete all `push_subscriptions`; each device subscribes again on next open |
 | Supabase access token, Cloudflare API token | revoke and reissue, update GitHub Actions secrets |
+| Database password (`SUPABASE_DB_URL` in the backups repo) | reset the database password in Supabase, update the backups repo secret |
 | Owner password / TOTP | change the password, re-enroll TOTP, then "Sign out everywhere" |
 
 ## Public repo
@@ -69,7 +70,7 @@ Rotate on any suspected leak, including a gitleaks or GitHub secret-scanning hit
 
 ## Production data stays in production
 
-Production data never goes to the local dev stack, to CI, or to an AI tool's context. The one exception is a backup restore test on a throwaway local stack, deleted afterwards. Development and tests use seed data only.
+Production data never goes to the local dev stack, to CI, or to an AI tool's context. The exceptions are backup restore tests: the backup job's throwaway Postgres container in the private backups repo, and manual restore drills on a throwaway project or local stack, deleted afterwards ([backups-export.md](backups-export.md)). Development and tests use seed data only.
 
 ## Frontend
 
