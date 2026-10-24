@@ -1,0 +1,305 @@
+<!doctype html>
+<!--
+  PROTOTYPE, throwaway. Wayfinder ticket "What do the reports show?".
+  Three structurally different report screens, switchable via ?variant=A|B|C
+  (or the floating bar / arrow keys). ?frame=phone|desktop toggles width.
+  Made-up data only. Open this file in a browser; no build step.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reports prototype</title>
+<style>
+  :root { --bg:#f4f5f7; --card:#fff; --ink:#1d2330; --muted:#6b7280; --line:#e3e6ea;
+          --taken:#2f9e5b; --skipped:#d9a020; --missed:#d64545; --pending:#b8bec8; --accent:#3a63d8; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:14px/1.4 -apple-system, system-ui, Segoe UI, sans-serif; color:var(--ink); background:#d9dce1; }
+  #app { margin:0 auto; background:var(--bg); min-height:100vh; padding-bottom:80px; }
+  body.phone #app { width:390px; box-shadow:0 0 0 1px #bbb; }
+  header.top { padding:14px 16px 8px; font-weight:700; font-size:20px; display:flex; justify-content:space-between; align-items:center; }
+  .muted { color:var(--muted); } .small { font-size:12px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:12px; margin:10px 16px; }
+  .row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .chip { border:1px solid var(--line); background:#fff; border-radius:999px; padding:4px 10px; cursor:pointer; font-size:13px; }
+  .chip.on { background:var(--ink); color:#fff; border-color:var(--ink); }
+  select, button { font:inherit; }
+  button.btn { border:1px solid var(--line); background:#fff; border-radius:8px; padding:6px 10px; cursor:pointer; }
+  .tabs { display:flex; margin:0 16px; border-bottom:1px solid var(--line); }
+  .tabs button { flex:1; border:0; background:none; padding:10px 4px; cursor:pointer; border-bottom:2px solid transparent; }
+  .tabs button.on { border-color:var(--accent); color:var(--accent); font-weight:600; }
+  .pct { font-size:28px; font-weight:700; }
+  .bar { height:8px; border-radius:4px; background:var(--line); overflow:hidden; display:flex; }
+  .bar span { display:block; height:100%; }
+  .dot { display:inline-block; width:10px; height:10px; border-radius:3px; }
+  .grid { display:grid; gap:2px; }
+  .cell { width:100%; aspect-ratio:1; border-radius:2px; }
+  table { border-collapse:collapse; width:100%; }
+  td, th { padding:6px 4px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; }
+  th { font-size:12px; color:var(--muted); font-weight:600; }
+  .chain { border-left:2px solid var(--line); margin-left:6px; padding-left:12px; }
+  .chain > div { position:relative; padding:4px 0 10px; }
+  .chain > div::before { content:''; position:absolute; left:-18px; top:9px; width:10px; height:10px; border-radius:50%; background:var(--accent); }
+  .chain > div.restock::before { background:var(--taken); width:8px; height:8px; left:-17px; }
+  .daylabel { position:sticky; top:0; background:var(--bg); padding:8px 16px 4px; font-weight:600; font-size:12px; color:var(--muted); z-index:1; }
+  .feed { display:flex; gap:10px; padding:8px 0; border-bottom:1px solid var(--line); }
+  .feed .ico { width:28px; text-align:center; font-size:16px; }
+  .two { display:grid; grid-template-columns:1fr; }
+  body:not(.phone) .two { grid-template-columns:260px 1fr; }
+  @media (max-width:700px) { body:not(.phone) .two { grid-template-columns:1fr; } }
+  .doc { background:#fff; margin:10px 16px; padding:20px; border:1px solid var(--line); }
+  .doc h2 { margin:0 0 4px; font-size:18px; } .doc h3 { margin:18px 0 6px; font-size:14px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); }
+  #switcher { position:fixed; bottom:16px; left:50%; transform:translateX(-50%); background:#111; color:#fff; border-radius:999px;
+              padding:6px 8px; display:flex; gap:6px; align-items:center; box-shadow:0 4px 16px rgba(0,0,0,.35); z-index:99; font-size:13px; }
+  #switcher button { background:#333; color:#fff; border:0; border-radius:999px; padding:4px 10px; cursor:pointer; }
+  #switcher .lbl { min-width:180px; text-align:center; }
+  @media print { #switcher, .noprint { display:none !important; } body, #app { background:#fff; } body.phone #app { width:auto; box-shadow:none; } }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="switcher">
+  <button id="prev">&larr;</button><span class="lbl" id="lbl"></span><button id="next">&rarr;</button>
+  <button id="frame"></button>
+</div>
+<script>
+// ---------- made-up data ----------
+const TODAY = new Date('2026-10-23T12:00:00');
+const DAY = 864e5;
+let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+const fmt = d => d.toLocaleDateString('en-GB', { day:'numeric', month:'short' });
+const fmtY = d => d.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
+const hm = d => d.toTimeString().slice(0,5);
+const dayKey = d => d.toISOString().slice(0,10);
+
+const ITEMS = [
+  { id:'A', name:'Medication A', strength:'50 mg', unit:'pill', times:['08:00','20:00'], amount:1, p:[.9,.05], qty:8, threshold:10 },
+  { id:'B', name:'Medication B', strength:'10 mg', unit:'pill', times:['09:00'], amount:1, p:[.8,.1], weekdays:[0,3], qty:34, threshold:30 },
+  { id:'C', name:'Medication C', strength:'200 mg', unit:'pill', asNeeded:true, qty:12, threshold:5 },
+  { id:'D', name:'Supply D (test strips)', unit:'strip', supply:true, qty:45, threshold:50 },
+];
+const DOSES = [];
+for (let i = 120; i >= 0; i--) {
+  const d = new Date(TODAY - i * DAY);
+  for (const it of ITEMS) {
+    if (it.supply) continue;
+    if (it.asNeeded) { if (rnd() < .12) { const t = new Date(d); t.setHours(13 + Math.floor(rnd()*6), Math.floor(rnd()*60)); if (t < TODAY) DOSES.push({ item:'C', due:null, taken:t, status:'taken', amount:1 }); } continue; }
+    if (it.weekdays && !it.weekdays.includes(d.getDay())) continue;
+    for (const tm of it.times) {
+      const due = new Date(d); const [h,m] = tm.split(':'); due.setHours(+h, +m, 0, 0);
+      let status, taken = null;
+      if (due > TODAY) continue;
+      if (TODAY - due < 3600e3 * 4) status = 'pending';
+      else { const r = rnd(); status = r < it.p[0] ? 'taken' : r < it.p[0] + it.p[1] ? 'skipped' : 'missed'; }
+      if (status === 'taken') taken = new Date(+due + Math.floor(rnd()*50) * 60e3);
+      DOSES.push({ item:it.id, due, taken, status, amount:it.amount });
+    }
+  }
+}
+const AUTHS = [
+  { id:1, type:'Prescription', ref:'RX-1001', covers:'Medication A, 60 pills/month', item:'A', issued:'2026-01-05', expires:'2026-04-05' },
+  { id:2, type:'Prescription', ref:'RX-1187', covers:'Medication A, 60 pills/month', item:'A', issued:'2026-04-01', expires:'2026-07-01', renews:1 },
+  { id:3, type:'Prescription', ref:'RX-1342', covers:'Medication A, 60 pills/month', item:'A', issued:'2026-06-28', expires:'2026-09-28', renews:2 },
+  { id:4, type:'Prescription', ref:'RX-1501', covers:'Medication A, 60 pills/month', item:'A', issued:'2026-09-25', expires:'2026-12-25', renews:3 },
+  { id:5, type:'Prescription', ref:'RX-1188', covers:'Medication B, 8 pills/month', item:'B', issued:'2026-04-01', expires:'2026-10-01' },
+  { id:6, type:'Prescription', ref:'RX-1502', covers:'Medication B, 8 pills/month', item:'B', issued:'2026-09-29', expires:'2027-03-29', renews:5 },
+  { id:7, type:'Form 17', ref:'F17-2201', covers:'6 physio sessions at Clinic B', issued:'2026-05-10', expires:'2026-08-10' },
+  { id:8, type:'Form 17', ref:'F17-2390', covers:'6 physio sessions at Clinic B', issued:'2026-08-08', expires:'2026-11-08', renews:7 },
+  { id:9, type:'Commitment', ref:'CM-0042', covers:'Supply D, 100 strips/quarter', item:'D', issued:'2026-03-01', expires:'2027-03-01' },
+];
+const RESTOCKS = [
+  ['A','2026-07-03',60,2],['A','2026-08-02',60,3],['A','2026-09-01',60,3],['A','2026-10-01',60,4],
+  ['B','2026-07-05',8,5],['B','2026-08-04',8,5],['B','2026-09-03',8,5],['B','2026-10-02',8,6],
+  ['C','2026-08-15',20,null],['D','2026-07-01',100,9],['D','2026-10-01',100,9],
+].map(([item,on,qty,auth]) => ({ item, on:new Date(on), qty, auth }));
+const COUNTS = [ { item:'A', at:new Date('2026-09-15'), prev:31, now:29 } ];
+const APPTS = [
+  { title:'Check-up', provider:'Dr. Example (Clinic A)', start:'2026-07-14T10:00', summary:'Blood test results fine. Keep Medication A at 50 mg twice a day. Renew prescription in autumn.' },
+  { title:'Physio session 1', provider:'Clinic B', start:'2026-08-20T08:30', auth:8, summary:'Assessment. Home exercises: 3 sets daily.' },
+  { title:'Physio session 2', provider:'Clinic B', start:'2026-09-03T08:30', auth:8, summary:'Progress good. Added stretching routine.' },
+  { title:'Follow-up', provider:'Dr. Example (Clinic A)', start:'2026-09-24T16:00', summary:'Discussed occasional missed evening doses. Consider moving evening dose to 21:00. Renewed prescription RX-1501.' },
+  { title:'Physio session 3', provider:'Clinic B', start:'2026-10-08T08:30', auth:8, summary:'' },
+  { title:'Eye exam', provider:'Clinic C', start:'2026-10-16T11:00', cancelled:true },
+  { title:'Physio session 4', provider:'Clinic B', start:'2026-10-29T08:30', auth:8 },
+].map(a => ({ ...a, start:new Date(a.start) }));
+const itemName = id => ITEMS.find(i => i.id === id).name;
+const PROVIDERS = [...new Set(APPTS.map(a => a.provider))];
+
+// ---------- state ----------
+const qs = new URLSearchParams(location.search);
+const S = { variant: qs.get('variant') || 'A', frame: qs.get('frame') || 'phone', period: 30, item: 'all', provider: 'all', tab: 'doses', vtab: 'A' };
+const PERIODS = [[7,'7 d'],[30,'30 d'],[90,'90 d'],[365,'All']];
+const inPeriod = d => d && d > new Date(TODAY - S.period * DAY);
+const scheduled = it => DOSES.filter(d => d.due && (it === 'all' || d.item === it) && inPeriod(d.due) && d.status !== 'pending');
+function adherence(it) {
+  const ds = scheduled(it); const c = { taken:0, skipped:0, missed:0 };
+  ds.forEach(d => c[d.status]++);
+  return { ...c, n: ds.length, pct: ds.length ? Math.round(c.taken / ds.length * 100) : null };
+}
+const statusBar = c => `<div class="bar">${['taken','skipped','missed'].map(s => `<span style="width:${c.n ? c[s]/c.n*100 : 0}%;background:var(--${s})"></span>`).join('')}</div>`;
+const legend = `<div class="row small muted">${['taken','skipped','missed','pending'].map(s => `<span><span class="dot" style="background:var(--${s})"></span> ${s}</span>`).join('')}</div>`;
+const chips = (key, opts) => opts.map(([v,l]) => `<button class="chip ${S[key]==v?'on':''}" data-set="${key}" data-val="${v}">${l}</button>`).join('');
+const itemSelect = (incl = ITEMS.filter(i => !i.supply)) => `<select data-set="item"><option value="all">All medications</option>${incl.map(i => `<option value="${i.id}" ${S.item===i.id?'selected':''}>${i.name}</option>`).join('')}</select>`;
+const providerSelect = () => `<select data-set="provider"><option value="all">All providers</option>${PROVIDERS.map(p => `<option ${S.provider===p?'selected':''}>${p}</option>`).join('')}</select>`;
+const exportBtns = `<span class="row noprint"><button class="btn" onclick="window.print()">PDF / Print</button><button class="btn" onclick="alert('Would download a CSV of the rows shown')">CSV</button></span>`;
+
+// Dose grid: rows = days, columns = due times
+function doseGrid(itemId) {
+  const it = ITEMS.find(i => i.id === itemId);
+  const days = Math.min(S.period, 120); const cols = it.times.length;
+  let h = `<div class="small muted">${it.name} ${it.strength} · ${it.times.join(', ')}${it.weekdays ? ' (Sun & Wed)' : ''}</div><div class="grid" style="grid-template-columns:repeat(${Math.min(days,30)},1fr);margin-top:6px">`;
+  const byKey = {}; DOSES.filter(d => d.item === itemId && d.due).forEach(d => byKey[dayKey(d.due) + hm(d.due)] = d);
+  for (const tm of it.times) for (let i = days - 1; i >= 0 && i >= days - 30; i--) {
+    const d = new Date(TODAY - i * DAY); const dose = byKey[dayKey(d) + tm];
+    h += `<div class="cell" title="${fmt(d)} ${tm}: ${dose ? dose.status : 'not due'}" style="background:${dose ? `var(--${dose.status})` : 'transparent'};${dose?'':'border:1px dashed var(--line)'}"></div>`;
+  }
+  return h + `</div>${days > 30 ? '<div class="small muted">Showing last 30 days in grid</div>' : ''}`;
+}
+function doseRows(itemId, limit = 400) {
+  return DOSES.filter(d => (itemId === 'all' || d.item === itemId) && inPeriod(d.due || d.taken))
+    .sort((a,b) => (b.due||b.taken) - (a.due||a.taken)).slice(0, limit)
+    .map(d => `<tr><td>${fmt(d.due||d.taken)}</td><td>${itemName(d.item)}</td><td>${d.due ? hm(d.due) : 'as needed'}</td><td><span class="dot" style="background:var(--${d.status})"></span> ${d.status}</td><td>${d.taken ? hm(d.taken) : ''}</td></tr>`).join('');
+}
+function renewalChains(filterItem = 'all') {
+  const heads = AUTHS.filter(a => !AUTHS.some(b => b.renews === a.id));
+  return heads.filter(h => filterItem === 'all' || h.item === filterItem).map(head => {
+    const chain = []; let cur = head; while (cur) { chain.push(cur); cur = AUTHS.find(a => a.id === cur.renews); }
+    const exp = new Date(head.expires); const daysLeft = Math.round((exp - TODAY) / DAY);
+    const rs = RESTOCKS.filter(r => chain.some(c => c.id === r.auth)).sort((a,b) => b.on - a.on);
+    return `<div class="card"><div class="row" style="justify-content:space-between"><b>${head.covers}</b><span class="small ${daysLeft < 30 ? '' : 'muted'}" style="${daysLeft<30?'color:var(--missed)':''}">expires ${fmt(exp)} (${daysLeft} d)</span></div>
+      <div class="small muted">${head.type} · ${chain.length - 1} previous renewal${chain.length === 2 ? '' : 's'}</div>
+      <div class="chain" style="margin-top:8px">${chain.map((a,i) => `<div><b>${a.ref}</b> <span class="muted small">${fmt(new Date(a.issued))} → ${fmt(new Date(a.expires))}${i === 0 ? ' · current' : ' · renewed'}</span>
+        ${RESTOCKS.filter(r => r.auth === a.id).map(r => `<div class="small" style="margin-top:2px">↳ restock ${fmt(r.on)}: +${r.qty} ${ITEMS.find(x=>x.id===r.item).unit}s</div>`).join('')}</div>`).join('')}</div></div>`;
+  }).join('');
+}
+function visits(provider = 'all', withEmpty = true) {
+  return APPTS.filter(a => a.start < TODAY && !a.cancelled && (provider === 'all' || a.provider === provider) && (withEmpty || a.summary)).sort((a,b) => b.start - a.start);
+}
+
+// ---------- Variant A: three tabs (revised after PM answers: Remaining, no %, no export, month view) ----------
+S.month = S.month || 0;
+function monthGrid(it, start, end) {
+  // rows = due times, columns = days of the month
+  const n = Math.round((end - start) / DAY);
+  const byKey = {}; DOSES.filter(d => d.item === it.id && d.due).forEach(d => byKey[dayKey(d.due) + hm(d.due)] = d);
+  let h = `<div class="grid" style="grid-template-columns:44px repeat(${n},1fr);margin-top:6px;align-items:center">`;
+  for (const tm of it.times) {
+    h += `<div class="small muted">${tm}</div>`;
+    for (let i = 0; i < n; i++) { const d = new Date(+start + i * DAY); const dose = byKey[dayKey(d) + tm];
+      h += `<div class="cell" title="${fmt(d)} ${tm}: ${dose ? dose.status : 'not due'}" style="background:${dose ? `var(--${dose.status})` : 'transparent'};${dose?'':'border:1px dashed var(--line)'}"></div>`; }
+  }
+  return h + '</div>';
+}
+function VariantA() {
+  const tabs = [['doses','Doses'],['renewals','Renewals'],['visits','Visits']];
+  let body = '';
+  if (S.tab === 'doses') {
+    const start = new Date(TODAY.getFullYear(), TODAY.getMonth() + S.month, 1), end = new Date(TODAY.getFullYear(), TODAY.getMonth() + S.month + 1, 1);
+    const inMonth = d => d && d >= start && d < end;
+    const sel = ITEMS.filter(i => !i.supply && (S.item === 'all' || S.item === i.id));
+    const remaining = `<div class="card"><b>Remaining</b><table style="margin-top:4px"><tr><th>Item</th><th>Left</th><th>Red at or below</th></tr>
+      ${ITEMS.filter(i => S.item === 'all' || S.item === i.id).map(i => { const low = i.qty <= i.threshold; return `<tr style="${low ? 'color:var(--missed);font-weight:600' : ''}"><td>${i.name}</td><td>${i.qty} ${i.unit}s</td><td>${i.threshold}</td></tr>`; }).join('')}</table></div>`;
+    const cards = sel.map(it => {
+      const ds = DOSES.filter(d => d.item === it.id && inMonth(d.due || d.taken));
+      if (it.asNeeded) return `<div class="card"><b>${it.name} ${it.strength}</b> <span class="small muted">as needed</span><div class="small" style="margin-top:4px">${ds.length} doses taken this month</div>
+        ${ds.sort((a,b) => b.taken - a.taken).map(d => `<div class="small muted">${fmt(d.taken)} ${hm(d.taken)}</div>`).join('')}</div>`;
+      const c = { taken:0, skipped:0, missed:0, pending:0 }; ds.forEach(d => c[d.status]++);
+      return `<div class="card"><b>${it.name} ${it.strength}</b> <span class="small muted">${it.times.join(', ')}${it.weekdays ? ' (Sun & Wed)' : ' daily'}</span>
+        <div class="small" style="margin:4px 0">${c.taken} taken · ${c.skipped} skipped · <span style="${c.missed?'color:var(--missed)':''}">${c.missed} missed</span></div>${monthGrid(it, start, end)}</div>`;
+    }).join('');
+    body = `<div class="card row" style="justify-content:space-between">${itemSelect()}
+      <span class="row"><button class="btn" data-set="month" data-val="${S.month - 1}">‹</button><b>${start.toLocaleDateString('en-GB', { month:'long', year:'numeric' })}</b><button class="btn" data-set="month" data-val="${S.month + 1}" ${S.month >= 0 ? 'disabled' : ''}>›</button></span></div>
+      ${remaining}${cards}<div class="card">${legend}</div>`;
+  } else if (S.tab === 'renewals') {
+    body = `<div class="card row">${itemSelect(ITEMS)}</div>${renewalChains(S.item)}`;
+  } else {
+    body = `<div class="card row">${providerSelect()}</div>
+      ${visits(S.provider).map(a => `<div class="card"><div class="row" style="justify-content:space-between"><b>${a.title}</b><span class="small muted">${fmtY(a.start)}</span></div>
+      <div class="small muted">${a.provider}${a.auth ? ' · ' + AUTHS.find(x=>x.id===a.auth).ref : ''}</div>
+      <p style="margin:6px 0 0">${a.summary || '<span class="muted">No visit summary yet. <a href="#">Add one</a></span>'}</p></div>`).join('')}`;
+  }
+  return `<header class="top">Reports</header><div class="tabs">${tabs.map(([k,l]) => `<button class="${S.tab===k?'on':''}" data-set="tab" data-val="${k}">${l}</button>`).join('')}</div>${body}`;
+}
+
+// ---------- Variant B: one timeline ----------
+function VariantB() {
+  const kinds = [['all','All'],['doses','Doses'],['stock','Stock'],['auth','Authorizations'],['visits','Visits']];
+  S.kind = S.kind || 'all';
+  const ev = [];
+  const want = k => S.kind === 'all' || S.kind === k;
+  const itemOk = id => S.item === 'all' || S.item === id;
+  if (want('doses')) {
+    // problems only (skipped/missed) + as-needed taken; daily summary line for the rest
+    const byDay = {};
+    DOSES.filter(d => itemOk(d.item) && inPeriod(d.due || d.taken)).forEach(d => { const k = dayKey(d.due || d.taken); (byDay[k] = byDay[k] || []).push(d); });
+    for (const [k, ds] of Object.entries(byDay)) {
+      const sch = ds.filter(d => d.due && d.status !== 'pending'); const tk = sch.filter(d => d.status === 'taken').length;
+      if (sch.length) ev.push({ at:new Date(k + 'T23:59'), ico:tk === sch.length ? '✅' : '⚠️', html:`Doses: ${tk}/${sch.length} taken${tk < sch.length ? ' — ' + sch.filter(d => d.status !== 'taken').map(d => `${itemName(d.item)} ${hm(d.due)} <i>${d.status}</i>`).join(', ') : ''}` });
+      ds.filter(d => !d.due).forEach(d => ev.push({ at:d.taken, ico:'💊', html:`${itemName(d.item)} taken (as needed)` }));
+    }
+  }
+  if (want('stock')) {
+    RESTOCKS.filter(r => itemOk(r.item) && inPeriod(r.on)).forEach(r => ev.push({ at:r.on, ico:'📦', html:`Restock ${itemName(r.item)} +${r.qty}${r.auth ? ` <span class="muted">under ${AUTHS.find(a=>a.id===r.auth).ref}</span>` : ''}` }));
+    COUNTS.filter(c => itemOk(c.item) && inPeriod(c.at)).forEach(c => ev.push({ at:c.at, ico:'🔢', html:`Stock count ${itemName(c.item)}: ${c.prev} → ${c.now} (${c.now - c.prev})` }));
+  }
+  if (want('auth')) AUTHS.filter(a => itemOk(a.item || 'x') || S.item === 'all').forEach(a => {
+    if (inPeriod(new Date(a.issued))) ev.push({ at:new Date(a.issued), ico:'📄', html:`${a.type} ${a.ref} ${a.renews ? 'renewed' : 'added'}: ${a.covers} <span class="muted">until ${fmt(new Date(a.expires))}</span>` });
+  });
+  if (want('visits') && S.item === 'all') APPTS.filter(a => a.start < TODAY && inPeriod(a.start)).forEach(a => ev.push({ at:a.start, ico:a.cancelled ? '✖️' : '🩺', html:`<b>${a.title}</b> · ${a.provider}${a.cancelled ? ' <i class="muted">cancelled</i>' : ''}${a.summary ? `<div style="margin-top:2px">${a.summary}</div>` : ''}` }));
+  ev.sort((a,b) => b.at - a.at);
+  let html = '', last = '';
+  for (const e of ev) { const m = e.at.toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short' }); if (m !== last) { html += `<div class="daylabel">${m}</div>`; last = m; } html += `<div class="feed" style="padding-left:16px;padding-right:16px"><div class="ico">${e.ico}</div><div>${e.html}</div></div>`; }
+  const c = adherence(S.item === 'all' ? 'all' : S.item);
+  return `<header class="top">History <span class="small muted" style="font-weight:400">${c.pct ?? '–'}% of doses taken</span></header>
+    <div style="padding:0 16px" class="row">${chips('kind', kinds)}</div>
+    <div style="padding:8px 16px" class="row">${chips('period', PERIODS)} ${itemSelect(ITEMS)} ${exportBtns}</div>
+    ${html || '<div class="card muted">Nothing in this period.</div>'}`;
+}
+
+// ---------- Variant C: per-item "doctor report" document ----------
+function VariantC() {
+  const it = S.item === 'all' ? null : ITEMS.find(i => i.id === S.item);
+  const meds = ITEMS.filter(i => !i.supply && !i.asNeeded);
+  const from = new Date(TODAY - S.period * DAY);
+  const sideList = `<div class="noprint" style="padding:0 16px"><div class="small muted" style="margin:8px 0 4px">Report for</div>
+    ${[['all','Everything (summary)'], ...ITEMS.map(i => [i.id, i.name])].map(([v,l]) => `<div><button class="chip ${S.item===v?'on':''}" style="margin:2px 0;width:100%;text-align:left;border-radius:8px" data-set="item" data-val="${v}">${l}</button></div>`).join('')}
+    <div class="small muted" style="margin:12px 0 4px">Period</div><div class="row">${chips('period', PERIODS)}</div>
+    <div class="small muted" style="margin:12px 0 4px">Export</div>${exportBtns}</div>`;
+  let doc = `<h2>${it ? it.name + (it.strength ? ' ' + it.strength : '') : 'Medication report'}</h2><div class="small muted">${fmtY(from)} – ${fmtY(TODAY)} · generated ${fmtY(TODAY)}</div>`;
+  const adhTable = list => `<table><tr><th>Medication</th><th>Schedule</th><th>Taken</th><th>Skipped</th><th>Missed</th><th>Adherence</th></tr>${list.map(m => { const c = adherence(m.id); return `<tr><td>${m.name} ${m.strength}</td><td>${m.times.join(', ')}${m.weekdays ? ' Sun & Wed' : ' daily'}</td><td>${c.taken}</td><td>${c.skipped}</td><td>${c.missed}</td><td><b>${c.pct}%</b></td></tr>`; }).join('')}</table>`;
+  if (!it) {
+    doc += `<h3>Adherence</h3>${adhTable(meds)}<div class="small muted" style="margin-top:4px">Medication C (as needed): ${DOSES.filter(d => d.item==='C' && inPeriod(d.taken)).length} doses taken.</div>
+      <h3>Authorizations</h3><table><tr><th>Covers</th><th>Current</th><th>Expires</th><th>Previous renewals</th></tr>${AUTHS.filter(a => !AUTHS.some(b => b.renews === a.id)).map(a => { let n = 0, c = a; const prev = []; while (c.renews) { c = AUTHS.find(x => x.id === c.renews); prev.push(fmt(new Date(c.issued))); } return `<tr><td>${a.covers}</td><td>${a.ref}</td><td>${fmt(new Date(a.expires))}</td><td>${prev.join(', ') || '—'}</td></tr>`; }).join('')}</table>
+      <h3>Visits</h3>${visits('all', false).filter(a => inPeriod(a.start)).map(a => `<p style="margin:6px 0"><b>${fmt(a.start)} · ${a.provider}</b> — ${a.summary}</p>`).join('') || '<p class="muted">None in period.</p>'}`;
+  } else if (it.supply) {
+    doc += `<h3>Restocks</h3><table><tr><th>Date</th><th>Qty</th><th>Under</th></tr>${RESTOCKS.filter(r => r.item === it.id).map(r => `<tr><td>${fmtY(r.on)}</td><td>+${r.qty}</td><td>${r.auth ? AUTHS.find(a=>a.id===r.auth).ref : ''}</td></tr>`).join('')}</table><h3>Authorizations</h3>${renewalChains(it.id)}`;
+  } else {
+    if (!it.asNeeded) doc += `<h3>Adherence</h3>${adhTable([it])}<div style="margin-top:10px">${doseGrid(it.id)}</div><div style="margin-top:6px">${legend}</div>`;
+    doc += `<h3>Dose log</h3><table><tr><th>Date</th><th>Item</th><th>Due</th><th>Status</th><th>Taken at</th></tr>${doseRows(it.id, 60)}</table>`;
+    doc += `<h3>Renewals & restocks</h3>${renewalChains(it.id) || '<p class="muted">No authorization.</p>'}`;
+    doc += `<h3>Stock counts</h3>${COUNTS.filter(c => c.item === it.id).map(c => `<p>${fmtY(c.at)}: ${c.prev} → ${c.now} (${c.now-c.prev})</p>`).join('') || '<p class="muted">None.</p>'}`;
+  }
+  return `<header class="top noprint">Reports</header><div class="two"><div>${sideList}</div><div class="doc">${doc}</div></div>`;
+}
+
+// ---------- switcher ----------
+const VARIANTS = { A:['A', 'Three tabs'], B:['B', 'One timeline'], C:['C', 'Doctor report document'] };
+const KEYS = Object.keys(VARIANTS);
+function render() {
+  document.body.className = S.frame;
+  document.getElementById('app').innerHTML = { A:VariantA, B:VariantB, C:VariantC }[S.variant]();
+  document.getElementById('lbl').textContent = `${S.variant} (${VARIANTS[S.variant][1]})`;
+  document.getElementById('frame').textContent = S.frame === 'phone' ? '📱 phone' : '🖥 desktop';
+  const p = new URLSearchParams({ variant:S.variant, frame:S.frame }); try { history.replaceState(null, '', '?' + p); } catch {}
+}
+document.addEventListener('click', e => { const b = e.target.closest('[data-set][data-val]'); if (b) { S[b.dataset.set] = isNaN(b.dataset.val) ? b.dataset.val : +b.dataset.val; render(); } });
+document.addEventListener('change', e => { if (e.target.dataset.set) { S[e.target.dataset.set] = e.target.value; render(); } });
+const step = n => { S.variant = KEYS[(KEYS.indexOf(S.variant) + n + KEYS.length) % KEYS.length]; render(); };
+document.getElementById('prev').onclick = () => step(-1);
+document.getElementById('next').onclick = () => step(1);
+document.getElementById('frame').onclick = () => { S.frame = S.frame === 'phone' ? 'desktop' : 'phone'; render(); };
+document.addEventListener('keydown', e => { if (e.target.matches('input,textarea,select,[contenteditable]')) return; if (e.key === 'ArrowLeft') step(-1); if (e.key === 'ArrowRight') step(1); });
+render();
+</script>
+</body>
+</html>
