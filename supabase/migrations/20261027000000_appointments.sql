@@ -96,3 +96,32 @@ $$;
 
 revoke execute on function public.cancel_appointment(uuid) from public, anon;
 grant execute on function public.cancel_appointment(uuid) to authenticated;
+
+-- Duplicate an Appointment at new times (there are no repeating
+-- Appointments). The copy keeps everything else, but not the Visit Summary or
+-- the cancellation, and gets its own invite_uid and a fresh invite_sequence.
+create or replace function public.duplicate_appointment(
+  appointment_id uuid,
+  starts_at timestamptz,
+  ends_at timestamptz
+)
+returns public.appointments
+language sql
+security invoker
+set search_path = ''
+as $$
+  insert into public.appointments (
+    title, starts_at, ends_at, provider, location, notes, authorization_id,
+    buffer_before_minutes, buffer_after_minutes, send_to_work_calendar
+  )
+  select
+    a.title, duplicate_appointment.starts_at, duplicate_appointment.ends_at, a.provider,
+    a.location, a.notes, a.authorization_id, a.buffer_before_minutes,
+    a.buffer_after_minutes, a.send_to_work_calendar
+  from public.appointments a
+  where a.id = duplicate_appointment.appointment_id
+  returning *;
+$$;
+
+revoke execute on function public.duplicate_appointment(uuid, timestamptz, timestamptz) from public, anon;
+grant execute on function public.duplicate_appointment(uuid, timestamptz, timestamptz) to authenticated;
