@@ -97,13 +97,23 @@ as $$
 declare
   today date := (app.now() at time zone app.time_zone())::date;
   starts date := coalesce(save_dose_schedule.effective_from, today);
+  item_kind public.stock_item_kind;
   saved public.dose_schedules;
 begin
-  if not exists (
-    select 1 from public.stock_items s
-    where s.id = save_dose_schedule.stock_item_id
-  ) then
+  select s.kind into item_kind
+  from public.stock_items s
+  where s.id = save_dose_schedule.stock_item_id;
+
+  if not found then
     raise exception 'Stock Item not found' using errcode = 'P0002';
+  elsif item_kind <> 'medication' then
+    raise exception 'Only medications have Dose Schedules' using errcode = '22023';
+  elsif save_dose_schedule.pattern = 'as_needed' and jsonb_array_length(save_dose_schedule.times) > 0 then
+    raise exception 'An As Needed schedule has no Dose Times' using errcode = '22023';
+  elsif save_dose_schedule.pattern <> 'as_needed' and jsonb_array_length(save_dose_schedule.times) = 0 then
+    raise exception 'A schedule needs at least one Dose Time' using errcode = '22023';
+  elsif starts < today then
+    raise exception 'A schedule cannot start in the past' using errcode = '22023';
   end if;
 
   update public.dose_schedules d
