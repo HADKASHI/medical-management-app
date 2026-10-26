@@ -30,7 +30,7 @@ jobs:
       - run: pnpm test
 
   database:
-    name: pgTAP (local Supabase)
+    name: pgTAP and Playwright (local Supabase)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -44,6 +44,14 @@ jobs:
         run: pnpm supabase start -x studio,imgproxy,vector,logflare,edge-runtime,mailpit,storage-api,realtime,postgres-meta
       - run: pnpm supabase db reset
       - run: pnpm test:db
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-traces
+          path: test-results/
+          retention-days: 7
 
   gitleaks:
     name: gitleaks
