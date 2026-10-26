@@ -105,6 +105,13 @@ export type Database = {
             foreignKeyName: 'dose_schedules_stock_item_id_fkey';
             columns: ['stock_item_id'];
             isOneToOne: false;
+            referencedRelation: 'alerts';
+            referencedColumns: ['stock_item_id'];
+          },
+          {
+            foreignKeyName: 'dose_schedules_stock_item_id_fkey';
+            columns: ['stock_item_id'];
+            isOneToOne: false;
             referencedRelation: 'stock_items';
             referencedColumns: ['id'];
           },
@@ -190,6 +197,13 @@ export type Database = {
             foreignKeyName: 'doses_stock_item_id_fkey';
             columns: ['stock_item_id'];
             isOneToOne: false;
+            referencedRelation: 'alerts';
+            referencedColumns: ['stock_item_id'];
+          },
+          {
+            foreignKeyName: 'doses_stock_item_id_fkey';
+            columns: ['stock_item_id'];
+            isOneToOne: false;
             referencedRelation: 'stock_items';
             referencedColumns: ['id'];
           },
@@ -229,6 +243,13 @@ export type Database = {
             foreignKeyName: 'restocks_stock_item_id_fkey';
             columns: ['stock_item_id'];
             isOneToOne: false;
+            referencedRelation: 'alerts';
+            referencedColumns: ['stock_item_id'];
+          },
+          {
+            foreignKeyName: 'restocks_stock_item_id_fkey';
+            columns: ['stock_item_id'];
+            isOneToOne: false;
             referencedRelation: 'stock_items';
             referencedColumns: ['id'];
           },
@@ -261,6 +282,13 @@ export type Database = {
           stock_item_id?: string;
         };
         Relationships: [
+          {
+            foreignKeyName: 'stock_counts_stock_item_id_fkey';
+            columns: ['stock_item_id'];
+            isOneToOne: false;
+            referencedRelation: 'alerts';
+            referencedColumns: ['stock_item_id'];
+          },
           {
             foreignKeyName: 'stock_counts_stock_item_id_fkey';
             columns: ['stock_item_id'];
@@ -315,7 +343,28 @@ export type Database = {
       };
     };
     Views: {
-      [_ in never]: never;
+      alerts: {
+        Row: {
+          kind: string | null;
+          message: string | null;
+          needs_stock_count: boolean | null;
+          stock_item_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          kind?: never;
+          message?: never;
+          needs_stock_count?: never;
+          stock_item_id?: string | null;
+        };
+        Update: {
+          kind?: never;
+          message?: never;
+          needs_stock_count?: never;
+          stock_item_id?: string | null;
+        };
+        Relationships: [];
+      };
     };
     Functions: {
       archive_stock_item: {
@@ -396,6 +445,26 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      log_as_needed_dose: {
+        Args: { amount: number; stock_item_id: string };
+        Returns: {
+          amount: number;
+          dose_schedule_id: string | null;
+          due_at: string | null;
+          id: string;
+          owner_id: string;
+          status: Database['public']['Enums']['dose_status'];
+          status_changed_at: string;
+          stock_item_id: string;
+          taken_at: string | null;
+        };
+        SetofOptions: {
+          from: '*';
+          to: 'doses';
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       record_restock: {
         Args: {
           note?: string;
@@ -464,6 +533,26 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      set_dose_status: {
+        Args: { dose_id: string; status: Database['public']['Enums']['dose_status'] };
+        Returns: {
+          amount: number;
+          dose_schedule_id: string | null;
+          due_at: string | null;
+          id: string;
+          owner_id: string;
+          status: Database['public']['Enums']['dose_status'];
+          status_changed_at: string;
+          stock_item_id: string;
+          taken_at: string | null;
+        };
+        SetofOptions: {
+          from: '*';
+          to: 'doses';
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       status: {
         Args: {
           appointment: Omit<
@@ -472,6 +561,26 @@ export type Database = {
           >;
         };
         Returns: Database['public']['Enums']['appointment_status'];
+      };
+      take_doses: {
+        Args: { dose_ids: string[] };
+        Returns: {
+          amount: number;
+          dose_schedule_id: string | null;
+          due_at: string | null;
+          id: string;
+          owner_id: string;
+          status: Database['public']['Enums']['dose_status'];
+          status_changed_at: string;
+          stock_item_id: string;
+          taken_at: string | null;
+        }[];
+        SetofOptions: {
+          from: '*';
+          to: 'doses';
+          isOneToOne: false;
+          isSetofReturn: true;
+        };
       };
     };
     Enums: {
