@@ -2,12 +2,16 @@ import { fireEvent, render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { MonthDose, MonthDoseReport, MonthDoseSchedule } from '@/features/reports/monthDoses';
+import type { ChainLink, RenewalChain } from '@/features/reports/renewals';
+import type { Visit } from '@/features/reports/visits';
 import type { StockItem } from '@/features/stock/stockItems';
 import { ReportsPage } from './ReportsPage';
 
 let items: StockItem[] = [];
 let report: MonthDoseReport = { doses: [], schedules: [] };
 const requestedMonths: string[] = [];
+let chains: RenewalChain[] = [];
+let visits: Visit[] = [];
 
 vi.mock('@/features/stock/stockItems', () => ({
   useStockItems: () => ({ data: items, isPending: false, error: null }),
@@ -18,6 +22,14 @@ vi.mock('@/features/reports/monthDoses', () => ({
     requestedMonths.push(month);
     return { data: report, isPending: false, error: null };
   },
+}));
+
+vi.mock('@/features/reports/renewals', () => ({
+  useRenewalChains: () => ({ data: chains, isPending: false, error: null }),
+}));
+
+vi.mock('@/features/reports/visits', () => ({
+  useVisits: () => ({ data: visits, isPending: false, error: null }),
 }));
 
 function stockItem(overrides: Partial<StockItem>): StockItem {
@@ -64,6 +76,44 @@ function dose(overrides: Partial<MonthDose>): MonthDose {
   };
 }
 
+function link(overrides: Partial<ChainLink>): ChainLink {
+  return {
+    current_id: overrides.id ?? 'r1',
+    depth: 0,
+    id: 'r1',
+    type: 'prescription',
+    reference_number: 'RX-1001',
+    covers: 'Medication A, 3 months',
+    stock_item_id: 'a',
+    issued_on: '2026-01-01',
+    expires_on: '2026-06-01',
+    archived_at: null,
+    renewed: false,
+    restocks: [],
+    ...overrides,
+  };
+}
+
+/** A chain from its links, newest first. */
+function chain(...links: ChainLink[]): RenewalChain {
+  const current = links[0]!;
+  const all = links.map((l, depth) => ({ ...l, current_id: current.id, depth }));
+  return { current: all[0]!, links: all };
+}
+
+function visit(overrides: Partial<Visit>): Visit {
+  return {
+    id: overrides.title ?? 'v1',
+    title: 'Physiotherapy',
+    starts_at: '2026-02-03T08:00:00Z',
+    provider: 'Dr. Example',
+    visit_summary: null,
+    status: 'done',
+    authorization: null,
+    ...overrides,
+  };
+}
+
 function renderPage() {
   render(
     <MemoryRouter>
@@ -77,6 +127,8 @@ beforeEach(() => {
   vi.setSystemTime(new Date('2026-02-10T10:00:00Z'));
   items = [];
   report = { doses: [], schedules: [] };
+  chains = [];
+  visits = [];
   requestedMonths.length = 0;
 });
 
@@ -217,5 +269,113 @@ describe('Reports: Doses tab', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Next month' }));
     expect(screen.getByText('February 2026')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Next month' })).toBeDisabled();
+  });
+});
+
+describe('Reports: Renewals tab', () => {
+  it('Renewals shows days left in red under 30', () => {
+    chains = [
+      chain(link({ id: 'r1', covers: 'Medication A, 3 months', expires_on: '2026-03-11' })),
+      chain(link({ id: 'r2', covers: 'Medication B, 3 months', expires_on: '2026-03-12' })),
+    ];
+    renderPage();
+    fireEvent.click(screen.getByRole('tab', { name: 'Renewals' }));
+
+    const soon = screen.getByRole('region', { name: 'Medication A, 3 months' });
+    expect(within(soon).getByText('29 days left')).toHaveAttribute('data-red', 'true');
+    const later = screen.getByRole('region', { name: 'Medication B, 3 months' });
+    expect(within(later).getByText('30 days left')).toHaveAttribute('data-red', 'false');
+  });
+
+  it('filtering by a Stock Item hides Authorizations with no Stock Item', () => {
+    items = [
+      stockItem({ id: 'a', name: 'Medication A' }),
+      stockItem({ id: 'b', name: 'Medication B' }),
+    ];
+    chains = [
+      chain(link({ id: 'r1', covers: 'Medication A, 3 months', stock_item_id: 'a' })),
+      chain(link({ id: 'r2', covers: 'Medication B, 3 months', stock_item_id: 'b' })),
+      chain(
+        link({
+          id: 'f1',
+          type: 'form_17',
+          covers: 'Physiotherapy, 6 sessions',
+          stock_item_id: null,
+        }),
+      ),
+    ];
+    renderPage();
+    fireEvent.click(screen.getByRole('tab', { name: 'Renewals' }));
+
+    const cards = () =>
+      screen.getAllByRole('region').map((card) => card.getAttribute('aria-label'));
+    expect(cards()).toEqual([
+      'Medication A, 3 months',
+      'Medication B, 3 months',
+      'Physiotherapy, 6 sessions',
+    ]);
+
+    fireEvent.change(screen.getByRole('combobox', { name: 'Stock Item' }), {
+      target: { value: 'a' },
+    });
+    expect(cards()).toEqual(['Medication A, 3 months']);
+  });
+});
+
+describe('Reports: Visits tab', () => {
+  it('Visits leaves out cancelled and future Appointments', () => {
+    visits = [
+      visit({ title: 'Dermatology', starts_at: '2026-02-20T08:00:00Z', status: 'scheduled' }),
+      visit({
+        title: 'Orthopedics',
+        starts_at: '2026-02-05T08:00:00Z',
+        authorization: { reference_number: 'F17-2001' },
+        visit_summary: 'Keep exercising twice a day.',
+      }),
+      visit({ title: 'Cardiology', starts_at: '2026-02-04T08:00:00Z', status: 'cancelled' }),
+      visit({ title: 'Physiotherapy', starts_at: '2026-01-15T08:00:00Z' }),
+    ];
+    renderPage();
+    fireEvent.click(screen.getByRole('tab', { name: 'Visits' }));
+
+    expect(screen.getAllByRole('region').map((card) => card.getAttribute('aria-label'))).toEqual([
+      'Orthopedics',
+      'Physiotherapy',
+    ]);
+    const done = screen.getByRole('region', { name: 'Orthopedics' });
+    expect(within(done).getByText('F17-2001')).toBeInTheDocument();
+    expect(within(done).getByText('Keep exercising twice a day.')).toBeInTheDocument();
+    const noSummary = screen.getByRole('region', { name: 'Physiotherapy' });
+    expect(within(noSummary).getByText('No visit summary yet')).toBeInTheDocument();
+    expect(within(noSummary).getByRole('link', { name: 'Add Visit Summary' })).toHaveAttribute(
+      'href',
+      '/appointments/Physiotherapy',
+    );
+  });
+
+  it('the Provider filter lists the distinct providers of past Appointments', () => {
+    visits = [
+      visit({ title: 'Check-up', provider: 'Dr. Future', status: 'scheduled' }),
+      visit({ title: 'Follow-up', provider: 'Dr. Example' }),
+      visit({ title: 'Cancelled visit', provider: 'Dr. Cancelled', status: 'cancelled' }),
+      visit({ title: 'Physiotherapy', provider: 'Clinic B' }),
+      visit({ title: 'First visit', provider: 'Dr. Example' }),
+      visit({ title: 'No provider', provider: null }),
+    ];
+    renderPage();
+    fireEvent.click(screen.getByRole('tab', { name: 'Visits' }));
+
+    const filter = screen.getByRole('combobox', { name: 'Provider' });
+    expect(
+      within(filter)
+        .getAllByRole('option')
+        .map((option) => option.textContent),
+    ).toEqual(['All', 'Clinic B', 'Dr. Example']);
+
+    fireEvent.change(filter, { target: { value: 'Dr. Example' } });
+    expect(screen.getAllByRole('region').map((card) => card.getAttribute('aria-label'))).toEqual([
+      'Follow-up',
+      'First visit',
+    ]);
   });
 });

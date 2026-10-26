@@ -632,6 +632,23 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      renewal_chains: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          archived_at: string;
+          covers: string;
+          current_id: string;
+          depth: number;
+          expires_on: string;
+          id: string;
+          issued_on: string;
+          reference_number: string;
+          renewed: boolean;
+          restocks: Json;
+          stock_item_id: string;
+          type: Database['public']['Enums']['authorization_type'];
+        }[];
+      };
       renewed: {
         Args: { '': Database['public']['Tables']['authorizations']['Row'] };
         Returns: {
