@@ -1,7 +1,7 @@
 -- Restocks: record_restock() adds Units to a Stock Item's quantity and keeps
 -- the Restock row, in one transaction.
 begin;
-select plan(8);
+select plan(9);
 
 select tests.as_owner();
 select tests.at('2026-03-10 09:00+02');
@@ -72,6 +72,17 @@ select results_eq(
   $$ select quantity from public.stock_items where id = current_setting('test.no_pack')::uuid $$,
   $$ values (10::numeric) $$,
   'a rejected Restock leaves quantity unchanged'
+);
+
+-- a stranger cannot restock the owner's Stock Item
+select tests.as_stranger();
+
+select throws_ok(
+  $$ select public.record_restock(
+       stock_item_id => current_setting('test.item')::uuid, quantity => 30) $$,
+  'P0002',
+  null,
+  'a stranger cannot restock the owner''s Stock Item'
 );
 
 select * from finish();
