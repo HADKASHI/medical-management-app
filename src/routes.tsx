@@ -1,5 +1,6 @@
 import type { RouteObject } from 'react-router';
 import { RequireAal2 } from './components/RequireAal2';
+import { AlertsPage } from './pages/AlertsPage';
 import { HomePage } from './pages/HomePage';
 import { SettingsPage } from './pages/SettingsPage';
 import { SignInPage } from './pages/SignInPage';
@@ -13,6 +14,14 @@ export const routes: RouteObject[] = [
     element: (
       <RequireAal2>
         <HomePage />
+      </RequireAal2>
+    ),
+  },
+  {
+    path: '/alerts',
+    element: (
+      <RequireAal2>
+        <AlertsPage />
       </RequireAal2>
     ),
   },
