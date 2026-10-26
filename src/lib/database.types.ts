@@ -3,16 +3,79 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never;
+      stock_items: {
+        Row: {
+          archived_at: string | null;
+          created_at: string;
+          id: string;
+          kind: Database['public']['Enums']['stock_item_kind'];
+          low_stock_threshold: number;
+          name: string;
+          owner_id: string;
+          pack_size: number | null;
+          quantity: number;
+          strength: string | null;
+          unit: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          archived_at?: string | null;
+          created_at?: string;
+          id?: string;
+          kind: Database['public']['Enums']['stock_item_kind'];
+          low_stock_threshold?: number;
+          name: string;
+          owner_id?: string;
+          pack_size?: number | null;
+          quantity?: number;
+          strength?: string | null;
+          unit: string;
+        };
+        Update: {
+          archived_at?: string | null;
+          created_at?: string;
+          id?: string;
+          kind?: Database['public']['Enums']['stock_item_kind'];
+          low_stock_threshold?: number;
+          name?: string;
+          owner_id?: string;
+          pack_size?: number | null;
+          quantity?: number;
+          strength?: string | null;
+          unit?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;
     };
     Functions: {
-      [_ in never]: never;
+      archive_stock_item: {
+        Args: { stock_item_id: string };
+        Returns: {
+          archived_at: string | null;
+          created_at: string;
+          id: string;
+          kind: Database['public']['Enums']['stock_item_kind'];
+          low_stock_threshold: number;
+          name: string;
+          owner_id: string;
+          pack_size: number | null;
+          quantity: number;
+          strength: string | null;
+          unit: string;
+        };
+        SetofOptions: {
+          from: '*';
+          to: 'stock_items';
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
     };
     Enums: {
-      [_ in never]: never;
+      stock_item_kind: 'medication' | 'supply';
     };
     CompositeTypes: {
       [_ in never]: never;
@@ -123,6 +186,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      stock_item_kind: ['medication', 'supply'],
+    },
   },
 } as const;
