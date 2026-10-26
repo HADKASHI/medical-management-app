@@ -7,6 +7,9 @@ export function HomePage() {
       <Link to="/alerts" className="block underline">
         Alerts
       </Link>
+      <Link to="/due-doses" className="block underline">
+        Due Doses
+      </Link>
       <Link to="/stock" className="block underline">
         Stock
       </Link>

@@ -418,6 +418,26 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      log_as_needed_dose: {
+        Args: { amount: number; stock_item_id: string };
+        Returns: {
+          amount: number;
+          dose_schedule_id: string | null;
+          due_at: string | null;
+          id: string;
+          owner_id: string;
+          status: Database['public']['Enums']['dose_status'];
+          status_changed_at: string;
+          stock_item_id: string;
+          taken_at: string | null;
+        };
+        SetofOptions: {
+          from: '*';
+          to: 'doses';
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       record_restock: {
         Args: {
           authorization_id?: string;
@@ -492,6 +512,46 @@ export type Database = {
           to: 'dose_schedules';
           isOneToOne: true;
           isSetofReturn: false;
+        };
+      };
+      set_dose_status: {
+        Args: { dose_id: string; status: Database['public']['Enums']['dose_status'] };
+        Returns: {
+          amount: number;
+          dose_schedule_id: string | null;
+          due_at: string | null;
+          id: string;
+          owner_id: string;
+          status: Database['public']['Enums']['dose_status'];
+          status_changed_at: string;
+          stock_item_id: string;
+          taken_at: string | null;
+        };
+        SetofOptions: {
+          from: '*';
+          to: 'doses';
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      take_doses: {
+        Args: { dose_ids: string[] };
+        Returns: {
+          amount: number;
+          dose_schedule_id: string | null;
+          due_at: string | null;
+          id: string;
+          owner_id: string;
+          status: Database['public']['Enums']['dose_status'];
+          status_changed_at: string;
+          stock_item_id: string;
+          taken_at: string | null;
+        }[];
+        SetofOptions: {
+          from: '*';
+          to: 'doses';
+          isOneToOne: false;
+          isSetofReturn: true;
         };
       };
     };

@@ -3,6 +3,7 @@ import { RequireAal2 } from './components/RequireAal2';
 import { AlertsPage } from './pages/AlertsPage';
 import { AuthorizationPage } from './pages/AuthorizationPage';
 import { AuthorizationsPage } from './pages/AuthorizationsPage';
+import { DueDosesPage } from './pages/DueDosesPage';
 import { HomePage } from './pages/HomePage';
 import { SettingsPage } from './pages/SettingsPage';
 import { SignInPage } from './pages/SignInPage';
@@ -80,6 +81,14 @@ export const routes: RouteObject[] = [
     element: (
       <RequireAal2>
         <AuthorizationPage renew />
+      </RequireAal2>
+    ),
+  },
+  {
+    path: '/due-doses',
+    element: (
+      <RequireAal2>
+        <DueDosesPage />
       </RequireAal2>
     ),
   },
