@@ -7,6 +7,7 @@ import { AuthorizationPage } from './pages/AuthorizationPage';
 import { AuthorizationsPage } from './pages/AuthorizationsPage';
 import { DueDosesPage } from './pages/DueDosesPage';
 import { HomePage } from './pages/HomePage';
+import { ReportsPage } from './pages/ReportsPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { SignInPage } from './pages/SignInPage';
 import { StockItemPage } from './pages/StockItemPage';
@@ -115,6 +116,14 @@ export const routes: RouteObject[] = [
     element: (
       <RequireAal2>
         <AuthorizationPage renew />
+      </RequireAal2>
+    ),
+  },
+  {
+    path: '/reports',
+    element: (
+      <RequireAal2>
+        <ReportsPage />
       </RequireAal2>
     ),
   },
