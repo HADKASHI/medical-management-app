@@ -1,7 +1,7 @@
 -- Restocks: record_restock() adds Units to a Stock Item's quantity and keeps
 -- the Restock row, in one transaction.
 begin;
-select plan(9);
+select plan(11);
 
 select tests.as_owner();
 select tests.at('2026-03-10 09:00+02');
@@ -74,8 +74,31 @@ select results_eq(
   'a rejected Restock leaves quantity unchanged'
 );
 
+-- a Restock can reference an Authorization
+select set_config('test.auth', tests.make_authorization(
+  stock_item => current_setting('test.item')::uuid)::text, true);
+
+select results_eq(
+  $$ select authorization_id from public.record_restock(
+       stock_item_id => current_setting('test.item')::uuid,
+       quantity => 30,
+       authorization_id => current_setting('test.auth')::uuid) $$,
+  $$ values (current_setting('test.auth')::uuid) $$,
+  'a Restock can reference an Authorization'
+);
+
 -- a stranger cannot restock the owner's Stock Item
 select tests.as_stranger();
+
+select throws_ok(
+  $$ select public.record_restock(
+       stock_item_id => tests.make_stock_item('Medication S'),
+       quantity => 30,
+       authorization_id => current_setting('test.auth')::uuid) $$,
+  '23503',
+  null,
+  'a stranger''s Restock cannot reference the owner''s Authorization'
+);
 
 select throws_ok(
   $$ select public.record_restock(

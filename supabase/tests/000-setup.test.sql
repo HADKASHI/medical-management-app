@@ -78,6 +78,31 @@ begin
 end;
 $$;
 
+-- An Authorization; `renews` makes it the Renewal of that one.
+create or replace function tests.make_authorization(
+  type public.authorization_type default 'prescription',
+  reference_number text default 'RX-1001',
+  stock_item uuid default null,
+  expires_on date default '2026-06-01',
+  renews uuid default null
+)
+returns uuid
+language plpgsql
+as $$
+declare
+  new_id uuid;
+begin
+  insert into public.authorizations
+    (type, reference_number, covers, stock_item_id, expires_on, renews_authorization_id)
+  values (
+    make_authorization.type, make_authorization.reference_number, 'Medication A, 3 months',
+    make_authorization.stock_item, make_authorization.expires_on, make_authorization.renews
+  )
+  returning id into new_id;
+  return new_id;
+end;
+$$;
+
 -- A Dose Schedule version through save_dose_schedule(), one Unit at each time.
 create or replace function tests.make_schedule(
   stock_item uuid,
