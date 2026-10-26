@@ -133,6 +133,29 @@ begin
 end;
 $$;
 
+-- An Appointment, one hour by default.
+create or replace function tests.make_appointment(
+  starts_at timestamptz default '2026-03-12 10:00+02',
+  ends_at timestamptz default null,
+  title text default 'Physiotherapy'
+)
+returns uuid
+language plpgsql
+as $$
+declare
+  new_id uuid;
+begin
+  insert into public.appointments (title, starts_at, ends_at)
+  values (
+    make_appointment.title,
+    make_appointment.starts_at,
+    coalesce(make_appointment.ends_at, make_appointment.starts_at + interval '1 hour')
+  )
+  returning id into new_id;
+  return new_id;
+end;
+$$;
+
 -- One minute of the per-minute job at the given time, run as the cron job's
 -- role. Returns to the owner afterwards so the test keeps reading under RLS.
 create or replace function tests.tick_at(at timestamptz)

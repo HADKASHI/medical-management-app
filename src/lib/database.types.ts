@@ -3,6 +3,68 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 export type Database = {
   public: {
     Tables: {
+      appointments: {
+        Row: {
+          authorization_id: string | null;
+          buffer_after_minutes: number;
+          buffer_before_minutes: number;
+          cancelled_at: string | null;
+          created_at: string;
+          ends_at: string;
+          id: string;
+          invite_sequence: number;
+          invite_uid: string;
+          location: string | null;
+          notes: string | null;
+          owner_id: string;
+          provider: string | null;
+          send_to_work_calendar: boolean;
+          starts_at: string;
+          title: string;
+          visit_summary: string | null;
+          status: Database['public']['Enums']['appointment_status'] | null;
+        };
+        ComputedFields: 'status';
+        Insert: {
+          authorization_id?: string | null;
+          buffer_after_minutes?: number;
+          buffer_before_minutes?: number;
+          cancelled_at?: string | null;
+          created_at?: string;
+          ends_at: string;
+          id?: string;
+          invite_sequence?: number;
+          invite_uid?: string;
+          location?: string | null;
+          notes?: string | null;
+          owner_id?: string;
+          provider?: string | null;
+          send_to_work_calendar?: boolean;
+          starts_at: string;
+          title: string;
+          visit_summary?: string | null;
+        };
+        Update: {
+          authorization_id?: string | null;
+          buffer_after_minutes?: number;
+          buffer_before_minutes?: number;
+          cancelled_at?: string | null;
+          created_at?: string;
+          ends_at?: string;
+          id?: string;
+          invite_sequence?: number;
+          invite_uid?: string;
+          location?: string | null;
+          notes?: string | null;
+          owner_id?: string;
+          provider?: string | null;
+          send_to_work_calendar?: boolean;
+          starts_at?: string;
+          title?: string;
+          visit_summary?: string | null;
+        };
+        Relationships: [];
+      };
       authorizations: {
         Row: {
           archived_at: string | null;
@@ -418,6 +480,62 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      cancel_appointment: {
+        Args: { appointment_id: string };
+        Returns: {
+          authorization_id: string | null;
+          buffer_after_minutes: number;
+          buffer_before_minutes: number;
+          cancelled_at: string | null;
+          created_at: string;
+          ends_at: string;
+          id: string;
+          invite_sequence: number;
+          invite_uid: string;
+          location: string | null;
+          notes: string | null;
+          owner_id: string;
+          provider: string | null;
+          send_to_work_calendar: boolean;
+          starts_at: string;
+          title: string;
+          visit_summary: string | null;
+        };
+        SetofOptions: {
+          from: '*';
+          to: 'appointments';
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      duplicate_appointment: {
+        Args: { appointment_id: string; ends_at: string; starts_at: string };
+        Returns: {
+          authorization_id: string | null;
+          buffer_after_minutes: number;
+          buffer_before_minutes: number;
+          cancelled_at: string | null;
+          created_at: string;
+          ends_at: string;
+          id: string;
+          invite_sequence: number;
+          invite_uid: string;
+          location: string | null;
+          notes: string | null;
+          owner_id: string;
+          provider: string | null;
+          send_to_work_calendar: boolean;
+          starts_at: string;
+          title: string;
+          visit_summary: string | null;
+        };
+        SetofOptions: {
+          from: '*';
+          to: 'appointments';
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       log_as_needed_dose: {
         Args: { amount: number; stock_item_id: string };
         Returns: {
@@ -534,6 +652,15 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      status: {
+        Args: {
+          appointment: Omit<
+            Database['public']['Tables']['appointments']['Row'],
+            Database['public']['Tables']['appointments']['ComputedFields']
+          >;
+        };
+        Returns: Database['public']['Enums']['appointment_status'];
+      };
       take_doses: {
         Args: { dose_ids: string[] };
         Returns: {
@@ -556,6 +683,7 @@ export type Database = {
       };
     };
     Enums: {
+      appointment_status: 'scheduled' | 'done' | 'cancelled';
       authorization_type: 'prescription' | 'form_17' | 'commitment';
       dose_schedule_pattern: 'daily' | 'weekdays' | 'every_n_days' | 'as_needed';
       dose_status: 'pending' | 'taken' | 'skipped' | 'missed';
@@ -671,6 +799,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      appointment_status: ['scheduled', 'done', 'cancelled'],
       authorization_type: ['prescription', 'form_17', 'commitment'],
       dose_schedule_pattern: ['daily', 'weekdays', 'every_n_days', 'as_needed'],
       dose_status: ['pending', 'taken', 'skipped', 'missed'],

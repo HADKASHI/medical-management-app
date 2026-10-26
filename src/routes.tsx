@@ -1,6 +1,8 @@
 import type { RouteObject } from 'react-router';
 import { RequireAal2 } from './components/RequireAal2';
 import { AlertsPage } from './pages/AlertsPage';
+import { AppointmentPage } from './pages/AppointmentPage';
+import { AppointmentsPage } from './pages/AppointmentsPage';
 import { AuthorizationPage } from './pages/AuthorizationPage';
 import { AuthorizationsPage } from './pages/AuthorizationsPage';
 import { DueDosesPage } from './pages/DueDosesPage';
@@ -53,6 +55,38 @@ export const routes: RouteObject[] = [
     ),
   },
   {
+    path: '/appointments',
+    element: (
+      <RequireAal2>
+        <AppointmentsPage />
+      </RequireAal2>
+    ),
+  },
+  {
+    path: '/appointments/new',
+    element: (
+      <RequireAal2>
+        <AppointmentPage />
+      </RequireAal2>
+    ),
+  },
+  {
+    path: '/appointments/:id',
+    element: (
+      <RequireAal2>
+        <AppointmentPage />
+      </RequireAal2>
+    ),
+  },
+  {
+    path: '/due-doses',
+    element: (
+      <RequireAal2>
+        <DueDosesPage />
+      </RequireAal2>
+    ),
+  },
+  {
     path: '/authorizations',
     element: (
       <RequireAal2>
@@ -81,14 +115,6 @@ export const routes: RouteObject[] = [
     element: (
       <RequireAal2>
         <AuthorizationPage renew />
-      </RequireAal2>
-    ),
-  },
-  {
-    path: '/due-doses',
-    element: (
-      <RequireAal2>
-        <DueDosesPage />
       </RequireAal2>
     ),
   },
