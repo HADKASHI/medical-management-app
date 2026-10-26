@@ -18,6 +18,7 @@ export type AppointmentInput = Pick<
   | 'buffer_before_minutes'
   | 'buffer_after_minutes'
   | 'send_to_work_calendar'
+  | 'authorization_id'
 >;
 
 const appointmentsKey = ['appointments'] as const;

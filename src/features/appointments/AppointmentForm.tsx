@@ -1,4 +1,6 @@
 import { useState, type FormEvent } from 'react';
+import type { Authorization } from '@/features/authorizations/authorizations';
+import { authorizationTitle } from '@/features/authorizations/labels';
 import type { AppointmentInput } from './appointments';
 import { fromLocalInput, toLocalInput } from './dateTime';
 
@@ -7,13 +9,18 @@ const fieldClass = 'block w-full rounded border border-gray-300 px-3 py-2';
 /**
  * Create or edit an Appointment. Start and end are entered in the device's
  * time; an end at or before the start is rejected here (and by the database).
+ * It may use one current Authorization (neither renewed nor Archived); the one
+ * already linked stays on offer even if it has since been renewed or Archived.
  */
 export function AppointmentForm({
   initial,
+  authorizations = [],
   submitting = false,
   onSubmit,
 }: {
   initial?: AppointmentInput;
+  /** The owner's Authorizations; the form offers the current ones. */
+  authorizations?: Authorization[];
   submitting?: boolean;
   onSubmit: (input: AppointmentInput) => void;
 }) {
@@ -26,6 +33,10 @@ export function AppointmentForm({
   const [bufferBefore, setBufferBefore] = useState(String(initial?.buffer_before_minutes ?? 0));
   const [bufferAfter, setBufferAfter] = useState(String(initial?.buffer_after_minutes ?? 0));
   const [sendToWork, setSendToWork] = useState(initial?.send_to_work_calendar ?? true);
+  const [authorizationId, setAuthorizationId] = useState(initial?.authorization_id ?? '');
+  const offered = authorizations.filter(
+    (a) => (!a.renewed && !a.archived_at) || a.id === initial?.authorization_id,
+  );
   const [invalid, setInvalid] = useState<string | null>(null);
 
   function handleSubmit(event: FormEvent) {
@@ -47,6 +58,7 @@ export function AppointmentForm({
       buffer_before_minutes: Number(bufferBefore),
       buffer_after_minutes: Number(bufferAfter),
       send_to_work_calendar: sendToWork,
+      authorization_id: authorizationId || null,
     });
   }
 
@@ -134,6 +146,21 @@ export function AppointmentForm({
           value={bufferAfter}
           onChange={(e) => setBufferAfter(e.target.value)}
         />
+      </label>
+      <label className="block">
+        Authorization
+        <select
+          className={fieldClass}
+          value={authorizationId}
+          onChange={(e) => setAuthorizationId(e.target.value)}
+        >
+          <option value="">None</option>
+          {offered.map((a) => (
+            <option key={a.id} value={a.id}>
+              {`${authorizationTitle(a)}: ${a.covers}`}
+            </option>
+          ))}
+        </select>
       </label>
       <label className="flex items-center gap-2">
         <input
