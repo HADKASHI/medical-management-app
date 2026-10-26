@@ -564,6 +564,31 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      month_dose_schedules: {
+        Args: { month: string };
+        Returns: {
+          effective_from: string;
+          effective_to: string;
+          id: string;
+          pattern: Database['public']['Enums']['dose_schedule_pattern'];
+          stock_item_id: string;
+          times: string[];
+        }[];
+      };
+      month_doses: {
+        Args: { month: string };
+        Returns: {
+          amount: number;
+          dose_schedule_id: string;
+          due_at: string;
+          id: string;
+          local_date: string;
+          local_time: string;
+          status: Database['public']['Enums']['dose_status'];
+          stock_item_id: string;
+          taken_at: string;
+        }[];
+      };
       record_restock: {
         Args: {
           authorization_id?: string;
