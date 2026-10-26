@@ -76,10 +76,15 @@ async function verifyTotp(code: string) {
   const supabase = getSupabase();
   const { data, error } = await supabase.auth.mfa.listFactors();
   if (error) throw error;
-  const factor = data.totp[0];
-  if (!factor) throw new Error('No authenticator is set up');
-  const result = await supabase.auth.mfa.challengeAndVerify({ factorId: factor.id, code });
-  if (result.error) throw result.error;
+  if (data.totp.length === 0) throw new Error('No authenticator is set up');
+  // The code may come from the main or the backup authenticator.
+  let lastError: Error | null = null;
+  for (const factor of data.totp) {
+    const result = await supabase.auth.mfa.challengeAndVerify({ factorId: factor.id, code });
+    if (!result.error) return;
+    lastError = result.error;
+  }
+  throw lastError;
 }
 
 function PasswordStep({
