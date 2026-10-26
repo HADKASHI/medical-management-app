@@ -5,11 +5,17 @@ import { getSupabase } from '@/lib/supabase';
 export type StockItem = Database['public']['Tables']['stock_items']['Row'];
 export type StockItemKind = Database['public']['Enums']['stock_item_kind'];
 
-/** The fields the owner enters when creating or editing a Stock Item. */
+/** The fields the owner enters when creating a Stock Item. */
 export type StockItemInput = Pick<
   StockItem,
   'name' | 'kind' | 'strength' | 'unit' | 'quantity' | 'low_stock_threshold' | 'pack_size'
 >;
+
+/**
+ * The fields the owner edits later. Quantity is not among them: it changes
+ * only through a taken Dose, a Restock or a Stock Count.
+ */
+export type StockItemEdit = Omit<StockItemInput, 'quantity'>;
 
 const stockItemsKey = ['stock_items'] as const;
 
@@ -29,9 +35,13 @@ export function useStockItems() {
 export function useSaveStockItem() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, input }: { id?: string; input: StockItemInput }) => {
+    mutationFn: async (
+      save: { id: string; input: StockItemEdit } | { id?: undefined; input: StockItemInput },
+    ) => {
       const table = getSupabase().from('stock_items');
-      const { error } = id ? await table.update(input).eq('id', id) : await table.insert(input);
+      const { error } = save.id
+        ? await table.update(save.input).eq('id', save.id)
+        : await table.insert(save.input);
       if (error) throw error;
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: stockItemsKey }),

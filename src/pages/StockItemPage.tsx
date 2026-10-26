@@ -1,10 +1,12 @@
 import { Link, useNavigate, useParams } from 'react-router';
 import { DoseScheduleSection } from '@/features/doses/DoseScheduleSection';
+import { StockChangesSection } from '@/features/stock/StockChangesSection';
 import { StockItemForm } from '@/features/stock/StockItemForm';
 import {
   useArchiveStockItem,
   useSaveStockItem,
   useStockItems,
+  type StockItemEdit,
   type StockItemInput,
 } from '@/features/stock/stockItems';
 
@@ -30,8 +32,10 @@ export function StockItemPage() {
     );
   }
 
-  function handleSubmit(input: StockItemInput) {
-    save.mutate({ id, input }, { onSuccess: () => navigate('/stock') });
+  function handleSubmit(input: StockItemEdit | StockItemInput) {
+    const onSuccess = () => navigate('/stock');
+    if (item) save.mutate({ id: item.id, input }, { onSuccess });
+    else save.mutate({ input: input as StockItemInput }, { onSuccess });
   }
 
   return (
@@ -54,6 +58,7 @@ export function StockItemPage() {
           {error.message}
         </p>
       )}
+      {item && !item.archived_at && <StockChangesSection item={item} />}
       {item && item.kind === 'medication' && !item.archived_at && (
         <DoseScheduleSection stockItemId={item.id} />
       )}

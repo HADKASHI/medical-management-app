@@ -133,6 +133,81 @@ export type Database = {
           },
         ];
       };
+      restocks: {
+        Row: {
+          created_at: string;
+          id: string;
+          note: string | null;
+          owner_id: string;
+          quantity: number;
+          restocked_on: string;
+          stock_item_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          id?: string;
+          note?: string | null;
+          owner_id?: string;
+          quantity: number;
+          restocked_on: string;
+          stock_item_id: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          note?: string | null;
+          owner_id?: string;
+          quantity?: number;
+          restocked_on?: string;
+          stock_item_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'restocks_stock_item_id_fkey';
+            columns: ['stock_item_id'];
+            isOneToOne: false;
+            referencedRelation: 'stock_items';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      stock_counts: {
+        Row: {
+          counted_at: string;
+          counted_quantity: number;
+          id: string;
+          owner_id: string;
+          previous_quantity: number;
+          stock_item_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          counted_at?: string;
+          counted_quantity: number;
+          id?: string;
+          owner_id?: string;
+          previous_quantity: number;
+          stock_item_id: string;
+        };
+        Update: {
+          counted_at?: string;
+          counted_quantity?: number;
+          id?: string;
+          owner_id?: string;
+          previous_quantity?: number;
+          stock_item_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'stock_counts_stock_item_id_fkey';
+            columns: ['stock_item_id'];
+            isOneToOne: false;
+            referencedRelation: 'stock_items';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       stock_items: {
         Row: {
           archived_at: string | null;
@@ -199,6 +274,47 @@ export type Database = {
         SetofOptions: {
           from: '*';
           to: 'stock_items';
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      record_restock: {
+        Args: {
+          note?: string;
+          packs?: number;
+          quantity?: number;
+          restocked_on?: string;
+          stock_item_id: string;
+        };
+        Returns: {
+          created_at: string;
+          id: string;
+          note: string | null;
+          owner_id: string;
+          quantity: number;
+          restocked_on: string;
+          stock_item_id: string;
+        };
+        SetofOptions: {
+          from: '*';
+          to: 'restocks';
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      record_stock_count: {
+        Args: { counted_quantity: number; stock_item_id: string };
+        Returns: {
+          counted_at: string;
+          counted_quantity: number;
+          id: string;
+          owner_id: string;
+          previous_quantity: number;
+          stock_item_id: string;
+        };
+        SetofOptions: {
+          from: '*';
+          to: 'stock_counts';
           isOneToOne: true;
           isSetofReturn: false;
         };
