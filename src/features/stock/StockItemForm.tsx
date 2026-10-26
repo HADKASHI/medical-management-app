@@ -1,11 +1,13 @@
 import { useState, type FormEvent } from 'react';
-import type { StockItemInput, StockItemKind } from './stockItems';
+import type { StockItemEdit, StockItemInput, StockItemKind } from './stockItems';
 
 const fieldClass = 'block w-full rounded border border-gray-300 px-3 py-2';
 
 /**
  * Create or edit a Stock Item. Strength is only for medications, so it is
  * hidden (and submitted as null) for a supply; the database rejects it too.
+ * Quantity is set only at creation: afterwards it changes through a taken
+ * Dose, a Restock or a Stock Count, so the drift gets recorded.
  */
 export function StockItemForm({
   initial,
@@ -14,7 +16,8 @@ export function StockItemForm({
 }: {
   initial?: StockItemInput;
   submitting?: boolean;
-  onSubmit: (input: StockItemInput) => void;
+  /** Called without `quantity` when editing (`initial` given). */
+  onSubmit: (input: StockItemEdit | StockItemInput) => void;
 }) {
   const [name, setName] = useState(initial?.name ?? '');
   const [kind, setKind] = useState<StockItemKind>(initial?.kind ?? 'medication');
@@ -28,15 +31,15 @@ export function StockItemForm({
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
-    onSubmit({
+    const edit: StockItemEdit = {
       name: name.trim(),
       kind,
       strength: kind === 'medication' && strength.trim() ? strength.trim() : null,
       unit: unit.trim(),
-      quantity: Number(quantity),
       low_stock_threshold: Number(threshold),
       pack_size: packSize.trim() ? Number(packSize) : null,
-    });
+    };
+    onSubmit(initial ? edit : { ...edit, quantity: Number(quantity) });
   }
 
   return (
@@ -82,17 +85,21 @@ export function StockItemForm({
           onChange={(e) => setUnit(e.target.value)}
         />
       </label>
-      <label className="block">
-        Quantity
-        <input
-          className={fieldClass}
-          type="number"
-          step="any"
-          required
-          value={quantity}
-          onChange={(e) => setQuantity(e.target.value)}
-        />
-      </label>
+      {initial ? (
+        <p className="text-gray-600">To change the quantity, record a Restock or a Stock Count.</p>
+      ) : (
+        <label className="block">
+          Quantity
+          <input
+            className={fieldClass}
+            type="number"
+            step="any"
+            required
+            value={quantity}
+            onChange={(e) => setQuantity(e.target.value)}
+          />
+        </label>
+      )}
       <label className="block">
         Low-Stock Threshold
         <input

@@ -35,4 +35,31 @@ describe('Stock Item form', () => {
       pack_size: null,
     });
   });
+
+  it('sets quantity only at creation; an edit points to Stock Count', () => {
+    const onSubmit = vi.fn();
+    render(
+      <StockItemForm
+        initial={{
+          name: 'Medication A',
+          kind: 'medication',
+          strength: '50 mg',
+          unit: 'pill',
+          quantity: 30,
+          low_stock_threshold: 10,
+          pack_size: 30,
+        }}
+        onSubmit={onSubmit}
+      />,
+    );
+
+    expect(screen.queryByLabelText('Quantity')).not.toBeInTheDocument();
+    expect(screen.getByText(/Stock Count/)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.not.objectContaining({ quantity: expect.anything() }),
+    );
+  });
 });
