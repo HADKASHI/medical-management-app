@@ -15,7 +15,10 @@ export function SettingsPage() {
     setBusy(true);
     setError(null);
     try {
-      await signOut({ auth: getSupabase().auth, queryClient, persister: queryCachePersister }, { everywhere });
+      await signOut(
+        { auth: getSupabase().auth, queryClient, persister: queryCachePersister },
+        { everywhere },
+      );
       navigate('/sign-in', { replace: true });
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Sign-out failed');
@@ -27,10 +30,20 @@ export function SettingsPage() {
   return (
     <main className="mx-auto max-w-xl space-y-4 p-4">
       <h1 className="text-2xl font-semibold">Settings</h1>
-      <button type="button" disabled={busy} className={buttonClass} onClick={() => handleSignOut(false)}>
+      <button
+        type="button"
+        disabled={busy}
+        className={buttonClass}
+        onClick={() => handleSignOut(false)}
+      >
         Sign out
       </button>
-      <button type="button" disabled={busy} className={buttonClass} onClick={() => handleSignOut(true)}>
+      <button
+        type="button"
+        disabled={busy}
+        className={buttonClass}
+        onClick={() => handleSignOut(true)}
+      >
         Sign out everywhere
       </button>
       {error && (

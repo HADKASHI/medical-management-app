@@ -4,7 +4,10 @@ import { defineConfig, devices } from '@playwright/test';
 // The local Supabase stack's URL and keys, read from `supabase status` at run
 // time so nothing is committed. Env vars of the same name take precedence.
 function localStack(): Record<string, string> {
-  const out = execSync('pnpm -s supabase status -o env', { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
+  const out = execSync('pnpm -s supabase status -o env', {
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'ignore'],
+  });
   return Object.fromEntries(
     out
       .split(/\r?\n/)

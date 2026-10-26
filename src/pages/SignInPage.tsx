@@ -49,9 +49,14 @@ export function SignInPage() {
     <main className="mx-auto max-w-sm space-y-4 p-4">
       <h1 className="text-2xl font-semibold">Sign in</h1>
       {step === 'password' && (
-        <PasswordStep busy={busy} onSubmit={(email, password) => run(() => signIn(email, password).then(advance))} />
+        <PasswordStep
+          busy={busy}
+          onSubmit={(email, password) => run(() => signIn(email, password).then(advance))}
+        />
       )}
-      {step === 'totp' && <TotpStep busy={busy} onSubmit={(code) => run(() => verifyTotp(code).then(advance))} />}
+      {step === 'totp' && (
+        <TotpStep busy={busy} onSubmit={(code) => run(() => verifyTotp(code).then(advance))} />
+      )}
       {step === 'enrol' && <EnrolStep busy={busy} run={run} onEnrolled={advance} />}
       {error && (
         <p role="alert" className="text-red-700">
@@ -77,7 +82,13 @@ async function verifyTotp(code: string) {
   if (result.error) throw result.error;
 }
 
-function PasswordStep({ busy, onSubmit }: { busy: boolean; onSubmit: (email: string, password: string) => void }) {
+function PasswordStep({
+  busy,
+  onSubmit,
+}: {
+  busy: boolean;
+  onSubmit: (email: string, password: string) => void;
+}) {
   function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const form = new FormData(e.currentTarget);
@@ -91,7 +102,13 @@ function PasswordStep({ busy, onSubmit }: { busy: boolean; onSubmit: (email: str
       </label>
       <label className="block">
         Password
-        <input name="password" type="password" autoComplete="current-password" required className={inputClass} />
+        <input
+          name="password"
+          type="password"
+          autoComplete="current-password"
+          required
+          className={inputClass}
+        />
       </label>
       <button type="submit" disabled={busy} className={buttonClass}>
         Sign in
@@ -159,7 +176,8 @@ function EnrolStep({
       // Drop factors left unverified by an earlier, abandoned enrolment.
       const { data: factors } = await supabase.auth.mfa.listFactors();
       for (const factor of factors?.all ?? []) {
-        if (factor.status === 'unverified') await supabase.auth.mfa.unenroll({ factorId: factor.id });
+        if (factor.status === 'unverified')
+          await supabase.auth.mfa.unenroll({ factorId: factor.id });
       }
       const { data, error } = await supabase.auth.mfa.enroll({ factorType: 'totp' });
       if (error) throw error;
@@ -172,7 +190,10 @@ function EnrolStep({
     if (!enrolment) return;
     const code = String(new FormData(e.currentTarget).get('code'));
     void run(async () => {
-      const { error } = await getSupabase().auth.mfa.challengeAndVerify({ factorId: enrolment.factorId, code });
+      const { error } = await getSupabase().auth.mfa.challengeAndVerify({
+        factorId: enrolment.factorId,
+        code,
+      });
       if (error) throw error;
       await onEnrolled();
     });
@@ -181,7 +202,9 @@ function EnrolStep({
   if (!enrolment) return <p>Setting up your authenticator…</p>;
   return (
     <form onSubmit={submit} className="space-y-3">
-      <p>Scan this code with your authenticator, or enter the key below, then type the code it shows.</p>
+      <p>
+        Scan this code with your authenticator, or enter the key below, then type the code it shows.
+      </p>
       <img src={enrolment.qrCode} alt="Authenticator QR code" className="h-48 w-48" />
       <p className="font-mono break-all">{enrolment.secret}</p>
       <CodeField />

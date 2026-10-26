@@ -45,7 +45,10 @@ async function createOwner(): Promise<Owner> {
   if (createError) throw createError;
 
   const owner = createClient(url, env('SUPABASE_ANON_KEY'), noSession);
-  const { error: signInError } = await owner.auth.signInWithPassword({ email: OWNER_EMAIL, password });
+  const { error: signInError } = await owner.auth.signInWithPassword({
+    email: OWNER_EMAIL,
+    password,
+  });
   if (signInError) throw signInError;
   const { data: factor, error: enrolError } = await owner.auth.mfa.enroll({ factorType: 'totp' });
   if (enrolError) throw enrolError;
@@ -63,8 +66,8 @@ async function createOwner(): Promise<Owner> {
 
 export const test = base.extend<{ owner: Owner }>({
   // eslint-disable-next-line no-empty-pattern
-  owner: async ({}, use) => {
-    await use(await createOwner());
+  owner: async ({}, provide) => {
+    await provide(await createOwner());
   },
 });
 

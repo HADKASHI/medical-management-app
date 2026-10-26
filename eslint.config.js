@@ -6,7 +6,17 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
-  { ignores: ['dist', 'coverage', 'supabase/.temp', 'supabase/.branches', 'playwright-report', 'test-results', 'blob-report'] },
+  {
+    ignores: [
+      'dist',
+      'coverage',
+      'supabase/.temp',
+      'supabase/.branches',
+      'playwright-report',
+      'test-results',
+      'blob-report',
+    ],
+  },
   {
     files: ['**/*.{ts,tsx}'],
     extends: [

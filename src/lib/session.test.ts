@@ -1,6 +1,9 @@
 import 'fake-indexeddb/auto';
 import { QueryClient } from '@tanstack/react-query';
-import { persistQueryClientRestore, persistQueryClientSave } from '@tanstack/react-query-persist-client';
+import {
+  persistQueryClientRestore,
+  persistQueryClientSave,
+} from '@tanstack/react-query-persist-client';
 import { describe, expect, it } from 'vitest';
 import { createQueryCachePersister, signOut } from './session';
 
