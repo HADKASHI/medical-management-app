@@ -22,6 +22,12 @@ const WEEK_MS = 7 * 24 * 3_600_000;
  */
 export function AppointmentPage() {
   const { id } = useParams();
+  // A fresh screen per Appointment (e.g. after Duplicate opens the copy), so
+  // the forms start from that Appointment's values.
+  return <AppointmentScreen key={id ?? 'new'} id={id} />;
+}
+
+function AppointmentScreen({ id }: { id: string | undefined }) {
   const navigate = useNavigate();
   const appointments = useAppointments();
   const save = useSaveAppointment();
@@ -55,12 +61,7 @@ export function AppointmentPage() {
       </h1>
       {cancelled && <p className="text-gray-600">Cancelled</p>}
       {appointment?.status === 'done' && <p className="text-gray-600">Done</p>}
-      <AppointmentForm
-        key={appointment?.id ?? 'new'}
-        initial={appointment}
-        submitting={save.isPending}
-        onSubmit={handleSubmit}
-      />
+      <AppointmentForm initial={appointment} submitting={save.isPending} onSubmit={handleSubmit} />
       {appointment && (
         <div className="flex flex-wrap gap-2">
           {!cancelled && (
@@ -92,10 +93,8 @@ export function AppointmentPage() {
           {error.message}
         </p>
       )}
-      {appointment?.status === 'done' && (
-        <VisitSummarySection key={appointment.id} appointment={appointment} />
-      )}
-      {appointment && <DuplicateSection key={appointment.id} appointment={appointment} />}
+      {appointment?.status === 'done' && <VisitSummarySection appointment={appointment} />}
+      {appointment && <DuplicateSection appointment={appointment} />}
       <Link to="/appointments" className="block underline">
         Appointments
       </Link>
