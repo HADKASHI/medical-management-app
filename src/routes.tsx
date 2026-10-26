@@ -1,5 +1,7 @@
 import type { RouteObject } from 'react-router';
 import { RequireAal2 } from './components/RequireAal2';
+import { AppointmentPage } from './pages/AppointmentPage';
+import { AppointmentsPage } from './pages/AppointmentsPage';
 import { HomePage } from './pages/HomePage';
 import { SettingsPage } from './pages/SettingsPage';
 import { SignInPage } from './pages/SignInPage';
@@ -37,6 +39,30 @@ export const routes: RouteObject[] = [
     element: (
       <RequireAal2>
         <StockItemPage />
+      </RequireAal2>
+    ),
+  },
+  {
+    path: '/appointments',
+    element: (
+      <RequireAal2>
+        <AppointmentsPage />
+      </RequireAal2>
+    ),
+  },
+  {
+    path: '/appointments/new',
+    element: (
+      <RequireAal2>
+        <AppointmentPage />
+      </RequireAal2>
+    ),
+  },
+  {
+    path: '/appointments/:id',
+    element: (
+      <RequireAal2>
+        <AppointmentPage />
       </RequireAal2>
     ),
   },

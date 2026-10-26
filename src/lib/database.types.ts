@@ -34,7 +34,7 @@ export type Database = {
           ends_at: string;
           id?: string;
           invite_sequence?: number;
-          invite_uid: string;
+          invite_uid?: string;
           location?: string | null;
           notes?: string | null;
           owner_id?: string;

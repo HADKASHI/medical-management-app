@@ -28,7 +28,7 @@ create table public.appointments (
   cancelled_at timestamptz,
   -- stable iCalendar UID for the Work Calendar Invite (ADR 0001): set once on
   -- creation, never changed
-  invite_uid text not null,
+  invite_uid text not null default gen_random_uuid()::text,
   -- increased on every update or cancellation sent (Phase C)
   invite_sequence int not null default 0,
   created_at timestamptz not null default app.now(),
