@@ -5,3 +5,6 @@ supabase/.temp
 supabase/.branches
 # Hand-written prose and specs keep their own formatting.
 *.md
+playwright-report
+test-results
+blob-report
