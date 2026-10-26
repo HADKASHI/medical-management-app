@@ -16,11 +16,20 @@ export function AlertsPage() {
       {data?.length === 0 && <p>No Alerts.</p>}
       <ul aria-label="Alerts" className="divide-y divide-gray-200">
         {data?.map((alert) => (
-          <li key={`${alert.kind}-${alert.stock_item_id}`} className="py-2">
+          <li
+            key={`${alert.kind}-${alert.authorization_id ?? alert.stock_item_id}`}
+            className="py-2"
+          >
             <Link
-              to={`/stock/${alert.stock_item_id}`}
+              to={
+                alert.authorization_id
+                  ? `/authorizations/${alert.authorization_id}`
+                  : `/stock/${alert.stock_item_id}`
+              }
               className={
-                alert.needs_stock_count ? 'font-semibold text-red-700 underline' : 'underline'
+                alert.needs_stock_count || alert.kind === 'authorization_expired'
+                  ? 'font-semibold text-red-700 underline'
+                  : 'underline'
               }
             >
               {alert.message}
