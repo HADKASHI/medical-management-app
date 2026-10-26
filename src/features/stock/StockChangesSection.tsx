@@ -1,4 +1,6 @@
 import { useState, type FormEvent } from 'react';
+import { useAuthorizations } from '@/features/authorizations/authorizations';
+import { authorizationTitle } from '@/features/authorizations/labels';
 import { RestockForm } from './RestockForm';
 import { useRecordRestock, useRecordStockCount } from './stockChanges';
 import type { StockItem } from './stockItems';
@@ -14,6 +16,12 @@ function localToday(): string {
 export function StockChangesSection({ item }: { item: StockItem }) {
   const restock = useRecordRestock(item.id);
   const count = useRecordStockCount(item.id);
+  const authorizations = useAuthorizations();
+  // Current Authorizations for this Stock Item, or for no Stock Item.
+  const fillableUnder = (authorizations.data ?? [])
+    .filter((a) => !a.archived_at && !a.renewed)
+    .filter((a) => a.stock_item_id === item.id || a.stock_item_id === null)
+    .map((a) => ({ id: a.id, label: `${authorizationTitle(a)}: ${a.covers}` }));
   const [counted, setCounted] = useState('');
   const [done, setDone] = useState<string | null>(null);
   const error = restock.error ?? count.error;
@@ -46,6 +54,7 @@ export function StockChangesSection({ item }: { item: StockItem }) {
         packSize={item.pack_size}
         unit={item.unit}
         today={localToday()}
+        authorizations={fillableUnder}
         submitting={restock.isPending}
         onSubmit={(input) => {
           setDone(null);

@@ -11,6 +11,7 @@ import {
   type AppointmentInput,
 } from '@/features/appointments/appointments';
 import { formatDateTime, fromLocalInput, toLocalInput } from '@/features/appointments/dateTime';
+import { useAuthorizations } from '@/features/authorizations/authorizations';
 
 const fieldClass = 'block w-full rounded border border-gray-300 px-3 py-2';
 const buttonClass = 'rounded border border-gray-300 px-4 py-2 disabled:opacity-50';
@@ -33,6 +34,7 @@ function AppointmentScreen({ id }: { id: string | undefined }) {
   const save = useSaveAppointment();
   const cancel = useCancelAppointment();
   const remove = useDeleteAppointment();
+  const authorizations = useAuthorizations();
   const appointment = id ? appointments.data?.find((a) => a.id === id) : undefined;
   const error = save.error ?? cancel.error ?? remove.error;
 
@@ -61,7 +63,12 @@ function AppointmentScreen({ id }: { id: string | undefined }) {
       </h1>
       {cancelled && <p className="text-gray-600">Cancelled</p>}
       {appointment?.status === 'done' && <p className="text-gray-600">Done</p>}
-      <AppointmentForm initial={appointment} submitting={save.isPending} onSubmit={handleSubmit} />
+      <AppointmentForm
+        initial={appointment}
+        authorizations={authorizations.data}
+        submitting={save.isPending}
+        onSubmit={handleSubmit}
+      />
       {appointment && (
         <div className="flex flex-wrap gap-2">
           {!cancelled && (

@@ -3,6 +3,8 @@ import { RequireAal2 } from './components/RequireAal2';
 import { AlertsPage } from './pages/AlertsPage';
 import { AppointmentPage } from './pages/AppointmentPage';
 import { AppointmentsPage } from './pages/AppointmentsPage';
+import { AuthorizationPage } from './pages/AuthorizationPage';
+import { AuthorizationsPage } from './pages/AuthorizationsPage';
 import { DueDosesPage } from './pages/DueDosesPage';
 import { HomePage } from './pages/HomePage';
 import { SettingsPage } from './pages/SettingsPage';
@@ -81,6 +83,38 @@ export const routes: RouteObject[] = [
     element: (
       <RequireAal2>
         <DueDosesPage />
+      </RequireAal2>
+    ),
+  },
+  {
+    path: '/authorizations',
+    element: (
+      <RequireAal2>
+        <AuthorizationsPage />
+      </RequireAal2>
+    ),
+  },
+  {
+    path: '/authorizations/new',
+    element: (
+      <RequireAal2>
+        <AuthorizationPage />
+      </RequireAal2>
+    ),
+  },
+  {
+    path: '/authorizations/:id',
+    element: (
+      <RequireAal2>
+        <AuthorizationPage />
+      </RequireAal2>
+    ),
+  },
+  {
+    path: '/authorizations/:id/renew',
+    element: (
+      <RequireAal2>
+        <AuthorizationPage renew />
       </RequireAal2>
     ),
   },

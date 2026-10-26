@@ -16,6 +16,9 @@ export function HomePage() {
       <Link to="/appointments" className="block underline">
         Appointments
       </Link>
+      <Link to="/authorizations" className="block underline">
+        Authorizations
+      </Link>
       <Link to="/settings" className="block underline">
         Settings
       </Link>

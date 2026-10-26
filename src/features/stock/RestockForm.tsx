@@ -6,12 +6,14 @@ const fieldClass = 'block w-full rounded border border-gray-300 px-3 py-2';
 /**
  * Record a Restock in Units or in packs. Packs need the Stock Item's Pack
  * Size; the form shows the Units they come to, and the database converts them
- * the same way when it records the Restock.
+ * the same way when it records the Restock. It can be filed under one of the
+ * offered Authorizations.
  */
 export function RestockForm({
   packSize,
   unit,
   today,
+  authorizations = [],
   submitting = false,
   onSubmit,
 }: {
@@ -19,6 +21,8 @@ export function RestockForm({
   unit: string;
   /** Today's date (YYYY-MM-DD), the default Restock date. */
   today: string;
+  /** The Authorizations this Restock may be filled under. */
+  authorizations?: { id: string; label: string }[];
   submitting?: boolean;
   onSubmit: (input: RestockInput) => void;
 }) {
@@ -26,6 +30,7 @@ export function RestockForm({
   const [amount, setAmount] = useState('');
   const [restockedOn, setRestockedOn] = useState(today);
   const [note, setNote] = useState('');
+  const [authorizationId, setAuthorizationId] = useState('');
   const packsAllowed = packSize != null;
   const usePacks = inPacks && packsAllowed;
 
@@ -36,6 +41,7 @@ export function RestockForm({
       ...(usePacks ? { packs: value } : { quantity: value }),
       restocked_on: restockedOn,
       note: note.trim() || null,
+      ...(authorizationId ? { authorization_id: authorizationId } : {}),
     });
     setAmount('');
     setNote('');
@@ -99,6 +105,23 @@ export function RestockForm({
         Note
         <input className={fieldClass} value={note} onChange={(e) => setNote(e.target.value)} />
       </label>
+      {authorizations.length > 0 && (
+        <label className="block">
+          Authorization
+          <select
+            className={fieldClass}
+            value={authorizationId}
+            onChange={(e) => setAuthorizationId(e.target.value)}
+          >
+            <option value="">None</option>
+            {authorizations.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.label}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
       <button
         type="submit"
         disabled={submitting}

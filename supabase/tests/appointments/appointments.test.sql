@@ -67,8 +67,9 @@ select throws_ok(
 );
 
 -- duplicating copies everything except times, Visit Summary, cancellation and invite_uid
+select set_config('test.auth', tests.make_authorization(type => 'form_17')::text, true);
 update public.appointments
-set visit_summary = 'Exercises for the knee', authorization_id = '00000000-0000-4000-8000-0000000000f1'
+set visit_summary = 'Exercises for the knee', authorization_id = current_setting('test.auth')::uuid
 where id = current_setting('test.appointment')::uuid;
 select public.cancel_appointment(current_setting('test.appointment')::uuid);
 
@@ -89,7 +90,7 @@ select results_eq(
   $$ values ('Physiotherapy session'::text, '2026-03-19 11:00+02'::timestamptz,
              '2026-03-19 11:45+02'::timestamptz, 'Clinic A'::text, 'Example Street 1'::text,
              'Bring the referral'::text, null::text,
-             '00000000-0000-4000-8000-0000000000f1'::uuid, 20, 30, false,
+             current_setting('test.auth')::uuid, 20, 30, false,
              null::timestamptz, 0) $$,
   'duplicating copies everything except times, Visit Summary and cancellation'
 );

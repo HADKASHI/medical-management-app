@@ -63,7 +63,74 @@ export type Database = {
           title?: string;
           visit_summary?: string | null;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: 'appointments_authorization_fkey';
+            columns: ['owner_id', 'authorization_id'];
+            isOneToOne: false;
+            referencedRelation: 'authorizations';
+            referencedColumns: ['owner_id', 'id'];
+          },
+        ];
+      };
+      authorizations: {
+        Row: {
+          archived_at: string | null;
+          covers: string;
+          created_at: string;
+          expires_on: string;
+          id: string;
+          issued_on: string | null;
+          owner_id: string;
+          reference_number: string;
+          renews_authorization_id: string | null;
+          stock_item_id: string | null;
+          type: Database['public']['Enums']['authorization_type'];
+          renewed: boolean | null;
+        };
+        ComputedFields: 'renewed';
+        Insert: {
+          archived_at?: string | null;
+          covers: string;
+          created_at?: string;
+          expires_on: string;
+          id?: string;
+          issued_on?: string | null;
+          owner_id?: string;
+          reference_number: string;
+          renews_authorization_id?: string | null;
+          stock_item_id?: string | null;
+          type: Database['public']['Enums']['authorization_type'];
+        };
+        Update: {
+          archived_at?: string | null;
+          covers?: string;
+          created_at?: string;
+          expires_on?: string;
+          id?: string;
+          issued_on?: string | null;
+          owner_id?: string;
+          reference_number?: string;
+          renews_authorization_id?: string | null;
+          stock_item_id?: string | null;
+          type?: Database['public']['Enums']['authorization_type'];
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'authorizations_renews_fkey';
+            columns: ['owner_id', 'renews_authorization_id'];
+            isOneToOne: false;
+            referencedRelation: 'authorizations';
+            referencedColumns: ['owner_id', 'id'];
+          },
+          {
+            foreignKeyName: 'authorizations_stock_item_fkey';
+            columns: ['owner_id', 'stock_item_id'];
+            isOneToOne: false;
+            referencedRelation: 'stock_items';
+            referencedColumns: ['owner_id', 'id'];
+          },
+        ];
       };
       dose_schedules: {
         Row: {
@@ -211,6 +278,7 @@ export type Database = {
       };
       restocks: {
         Row: {
+          authorization_id: string | null;
           created_at: string;
           id: string;
           note: string | null;
@@ -221,6 +289,7 @@ export type Database = {
         };
         ComputedFields: never;
         Insert: {
+          authorization_id?: string | null;
           created_at?: string;
           id?: string;
           note?: string | null;
@@ -230,6 +299,7 @@ export type Database = {
           stock_item_id: string;
         };
         Update: {
+          authorization_id?: string | null;
           created_at?: string;
           id?: string;
           note?: string | null;
@@ -239,6 +309,13 @@ export type Database = {
           stock_item_id?: string;
         };
         Relationships: [
+          {
+            foreignKeyName: 'restocks_authorization_fkey';
+            columns: ['owner_id', 'authorization_id'];
+            isOneToOne: false;
+            referencedRelation: 'authorizations';
+            referencedColumns: ['owner_id', 'id'];
+          },
           {
             foreignKeyName: 'restocks_stock_item_id_fkey';
             columns: ['stock_item_id'];
@@ -367,6 +444,28 @@ export type Database = {
       };
     };
     Functions: {
+      archive_authorization: {
+        Args: { authorization_id: string };
+        Returns: {
+          archived_at: string | null;
+          covers: string;
+          created_at: string;
+          expires_on: string;
+          id: string;
+          issued_on: string | null;
+          owner_id: string;
+          reference_number: string;
+          renews_authorization_id: string | null;
+          stock_item_id: string | null;
+          type: Database['public']['Enums']['authorization_type'];
+        };
+        SetofOptions: {
+          from: '*';
+          to: 'authorizations';
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       archive_stock_item: {
         Args: { stock_item_id: string };
         Returns: {
@@ -467,6 +566,7 @@ export type Database = {
       };
       record_restock: {
         Args: {
+          authorization_id?: string;
           note?: string;
           packs?: number;
           quantity?: number;
@@ -474,6 +574,7 @@ export type Database = {
           stock_item_id: string;
         };
         Returns: {
+          authorization_id: string | null;
           created_at: string;
           id: string;
           note: string | null;
@@ -505,6 +606,12 @@ export type Database = {
           isOneToOne: true;
           isSetofReturn: false;
         };
+      };
+      renewed: {
+        Args: { '': Database['public']['Tables']['authorizations']['Row'] };
+        Returns: {
+          error: true;
+        } & 'the function public.renewed with parameter or with a single unnamed json/jsonb parameter, but no matches were found in the schema cache';
       };
       save_dose_schedule: {
         Args: {
@@ -585,6 +692,7 @@ export type Database = {
     };
     Enums: {
       appointment_status: 'scheduled' | 'done' | 'cancelled';
+      authorization_type: 'prescription' | 'form_17' | 'commitment';
       dose_schedule_pattern: 'daily' | 'weekdays' | 'every_n_days' | 'as_needed';
       dose_status: 'pending' | 'taken' | 'skipped' | 'missed';
       stock_item_kind: 'medication' | 'supply';
@@ -700,6 +808,7 @@ export const Constants = {
   public: {
     Enums: {
       appointment_status: ['scheduled', 'done', 'cancelled'],
+      authorization_type: ['prescription', 'form_17', 'commitment'],
       dose_schedule_pattern: ['daily', 'weekdays', 'every_n_days', 'as_needed'],
       dose_status: ['pending', 'taken', 'skipped', 'missed'],
       stock_item_kind: ['medication', 'supply'],

@@ -37,6 +37,30 @@ describe('Restock form', () => {
     });
   });
 
+  it('files a Restock under a chosen Authorization', () => {
+    const onSubmit = vi.fn();
+    render(
+      <RestockForm
+        packSize={30}
+        unit="pill"
+        today="2026-03-10"
+        authorizations={[{ id: 'a1', label: 'Prescription RX-1001' }]}
+        onSubmit={onSubmit}
+      />,
+    );
+
+    fireEvent.change(screen.getByLabelText('Units (pill)'), { target: { value: '30' } });
+    fireEvent.change(screen.getByLabelText('Authorization'), { target: { value: 'a1' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Restock' }));
+
+    expect(onSubmit).toHaveBeenCalledWith({
+      quantity: 30,
+      restocked_on: '2026-03-10',
+      note: null,
+      authorization_id: 'a1',
+    });
+  });
+
   it('needs Pack Size for packs', () => {
     render(<RestockForm packSize={null} unit="pill" today="2026-03-10" onSubmit={vi.fn()} />);
 
