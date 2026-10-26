@@ -67,8 +67,11 @@ A medication's schedule. Editing a schedule **ends the current version and start
 | pattern | enum `daily` \| `weekdays` \| `every_n_days` \| `as_needed` | |
 | weekdays | smallint[], null | 0–6, for `weekdays` |
 | interval_days | int, null | for `every_n_days` (counted from `effective_from`) |
-| effective_from | date | |
-| effective_to | date, null | null = current version |
+| effective_from | date | defaults to today; never in the past. A future date keeps the previous version in force until then |
+| effective_to | date, null | **exclusive**; null = current version |
+| created_at | timestamptz | a version saved mid-day generates no Dose due before this moment, so the morning isn't backdated |
+
+If two Dose Times of one version fall on the same instant (a spring-forward time moved onto another time, e.g. 02:30 and 03:30), one Dose is created, with the first time's amount.
 
 ### `dose_times`
 | column | type | notes |
