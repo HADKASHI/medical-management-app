@@ -3,6 +3,136 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 export type Database = {
   public: {
     Tables: {
+      dose_schedules: {
+        Row: {
+          created_at: string;
+          effective_from: string;
+          effective_to: string | null;
+          id: string;
+          interval_days: number | null;
+          owner_id: string;
+          pattern: Database['public']['Enums']['dose_schedule_pattern'];
+          stock_item_id: string;
+          weekdays: number[] | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          effective_from: string;
+          effective_to?: string | null;
+          id?: string;
+          interval_days?: number | null;
+          owner_id?: string;
+          pattern: Database['public']['Enums']['dose_schedule_pattern'];
+          stock_item_id: string;
+          weekdays?: number[] | null;
+        };
+        Update: {
+          created_at?: string;
+          effective_from?: string;
+          effective_to?: string | null;
+          id?: string;
+          interval_days?: number | null;
+          owner_id?: string;
+          pattern?: Database['public']['Enums']['dose_schedule_pattern'];
+          stock_item_id?: string;
+          weekdays?: number[] | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'dose_schedules_stock_item_id_fkey';
+            columns: ['stock_item_id'];
+            isOneToOne: false;
+            referencedRelation: 'stock_items';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      dose_times: {
+        Row: {
+          amount: number;
+          dose_schedule_id: string;
+          id: string;
+          owner_id: string;
+          time_of_day: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          amount: number;
+          dose_schedule_id: string;
+          id?: string;
+          owner_id?: string;
+          time_of_day: string;
+        };
+        Update: {
+          amount?: number;
+          dose_schedule_id?: string;
+          id?: string;
+          owner_id?: string;
+          time_of_day?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'dose_times_dose_schedule_id_fkey';
+            columns: ['dose_schedule_id'];
+            isOneToOne: false;
+            referencedRelation: 'dose_schedules';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      doses: {
+        Row: {
+          amount: number;
+          dose_schedule_id: string | null;
+          due_at: string | null;
+          id: string;
+          owner_id: string;
+          status: Database['public']['Enums']['dose_status'];
+          status_changed_at: string;
+          stock_item_id: string;
+          taken_at: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          amount: number;
+          dose_schedule_id?: string | null;
+          due_at?: string | null;
+          id?: string;
+          owner_id?: string;
+          status?: Database['public']['Enums']['dose_status'];
+          status_changed_at?: string;
+          stock_item_id: string;
+          taken_at?: string | null;
+        };
+        Update: {
+          amount?: number;
+          dose_schedule_id?: string | null;
+          due_at?: string | null;
+          id?: string;
+          owner_id?: string;
+          status?: Database['public']['Enums']['dose_status'];
+          status_changed_at?: string;
+          stock_item_id?: string;
+          taken_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'doses_dose_schedule_id_fkey';
+            columns: ['dose_schedule_id'];
+            isOneToOne: false;
+            referencedRelation: 'dose_schedules';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'doses_stock_item_id_fkey';
+            columns: ['stock_item_id'];
+            isOneToOne: false;
+            referencedRelation: 'stock_items';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       stock_items: {
         Row: {
           archived_at: string | null;
@@ -73,8 +203,37 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      save_dose_schedule: {
+        Args: {
+          effective_from?: string;
+          interval_days?: number;
+          pattern: Database['public']['Enums']['dose_schedule_pattern'];
+          stock_item_id: string;
+          times?: Json;
+          weekdays?: number[];
+        };
+        Returns: {
+          created_at: string;
+          effective_from: string;
+          effective_to: string | null;
+          id: string;
+          interval_days: number | null;
+          owner_id: string;
+          pattern: Database['public']['Enums']['dose_schedule_pattern'];
+          stock_item_id: string;
+          weekdays: number[] | null;
+        };
+        SetofOptions: {
+          from: '*';
+          to: 'dose_schedules';
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
     };
     Enums: {
+      dose_schedule_pattern: 'daily' | 'weekdays' | 'every_n_days' | 'as_needed';
+      dose_status: 'pending' | 'taken' | 'skipped' | 'missed';
       stock_item_kind: 'medication' | 'supply';
     };
     CompositeTypes: {
@@ -187,6 +346,8 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      dose_schedule_pattern: ['daily', 'weekdays', 'every_n_days', 'as_needed'],
+      dose_status: ['pending', 'taken', 'skipped', 'missed'],
       stock_item_kind: ['medication', 'supply'],
     },
   },

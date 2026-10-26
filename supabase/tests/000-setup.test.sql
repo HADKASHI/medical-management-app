@@ -57,6 +57,71 @@ returns void
 language sql
 as $$ select tests.as_user('00000000-0000-4000-8000-00000000000b', 'stranger@example.com', 'aal2') $$;
 
+-- Builders: insert a valid row as the current role, taking only what the test
+-- cares about, and return its id. plpgsql so they bind late to the schema.
+
+create or replace function tests.make_stock_item(
+  name text default 'Medication A',
+  kind public.stock_item_kind default 'medication',
+  quantity numeric default 30
+)
+returns uuid
+language plpgsql
+as $$
+declare
+  new_id uuid;
+begin
+  insert into public.stock_items (name, kind, unit, quantity, low_stock_threshold)
+  values (make_stock_item.name, make_stock_item.kind, 'pill', make_stock_item.quantity, 0)
+  returning id into new_id;
+  return new_id;
+end;
+$$;
+
+-- A Dose Schedule version through save_dose_schedule(), one Unit at each time.
+create or replace function tests.make_schedule(
+  stock_item uuid,
+  times text[] default '{08:00}',
+  pattern public.dose_schedule_pattern default 'daily',
+  weekdays smallint[] default null,
+  interval_days int default null,
+  effective_from date default null
+)
+returns uuid
+language plpgsql
+as $$
+begin
+  return (
+    public.save_dose_schedule(
+      stock_item_id => stock_item,
+      pattern => make_schedule.pattern,
+      times => coalesce(
+        (select jsonb_agg(jsonb_build_object('time_of_day', t, 'amount', 1))
+         from unnest(make_schedule.times) t),
+        '[]'::jsonb
+      ),
+      weekdays => make_schedule.weekdays,
+      interval_days => make_schedule.interval_days,
+      effective_from => make_schedule.effective_from
+    )
+  ).id;
+end;
+$$;
+
+-- One minute of the per-minute job at the given time, run as the cron job's
+-- role. Returns to the owner afterwards so the test keeps reading under RLS.
+create or replace function tests.tick_at(at timestamptz)
+returns void
+language plpgsql
+as $$
+begin
+  perform tests.at(at);
+  reset role;
+  perform app.tick();
+  perform tests.as_owner();
+end;
+$$;
+
 grant execute on all functions in schema tests to anon, authenticated, service_role;
 
 begin;

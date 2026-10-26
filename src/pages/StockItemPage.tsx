@@ -1,4 +1,5 @@
 import { Link, useNavigate, useParams } from 'react-router';
+import { DoseScheduleSection } from '@/features/doses/DoseScheduleSection';
 import { StockItemForm } from '@/features/stock/StockItemForm';
 import {
   useArchiveStockItem,
@@ -52,6 +53,9 @@ export function StockItemPage() {
         <p role="alert" className="text-red-700">
           {error.message}
         </p>
+      )}
+      {item && item.kind === 'medication' && !item.archived_at && (
+        <DoseScheduleSection stockItemId={item.id} />
       )}
       <Link to="/stock" className="block underline">
         Stock
