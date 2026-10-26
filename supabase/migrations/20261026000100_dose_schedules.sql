@@ -148,12 +148,19 @@ begin
   insert into public.doses (owner_id, stock_item_id, dose_schedule_id, due_at, amount, status, status_changed_at)
   select s.owner_id, s.stock_item_id, s.id, due.at, t.amount, 'pending', now_
   from public.dose_schedules s
+  join public.stock_items i on i.id = s.stock_item_id and i.archived_at is null
   join public.dose_times t on t.dose_schedule_id = s.id
   cross join lateral (values (today - 1), (today)) as day (d)
   -- Postgres's own reading of a local time handles daylight-saving days.
   cross join lateral (select (day.d + t.time_of_day) at time zone app.time_zone() as at) due
   where day.d >= s.effective_from
     and (s.effective_to is null or day.d < s.effective_to)
+    and case s.pattern
+      when 'daily' then true
+      when 'weekdays' then extract(dow from day.d)::smallint = any (s.weekdays)
+      when 'every_n_days' then (day.d - s.effective_from) % s.interval_days = 0
+      else false
+    end
     and due.at <= now_
     and due.at >= s.created_at
   on conflict (dose_schedule_id, due_at) do nothing;
