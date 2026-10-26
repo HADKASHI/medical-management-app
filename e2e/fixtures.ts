@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { test as base, type Page } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
 import { Secret, TOTP } from 'otpauth';
+import postgres from 'postgres';
 
 export interface Owner {
   email: string;
@@ -89,6 +90,19 @@ export async function signIn(page: Page, owner: Owner): Promise<void> {
   await page.getByLabel('Authentication code').fill(owner.totpCode());
   await page.getByRole('button', { name: 'Verify' }).click();
   await base.expect(page.getByRole('heading', { name: 'Medical Management' })).toBeVisible();
+}
+
+/**
+ * Runs `fn` with a direct connection to the local database as `postgres`, for
+ * setup the UI can't do, such as calling app.tick(). Closed afterwards.
+ */
+export async function withDatabase<T>(fn: (sql: postgres.Sql) => Promise<T>): Promise<T> {
+  const sql = postgres(env('SUPABASE_DB_URL'), { max: 1, onnotice: () => {} });
+  try {
+    return await fn(sql);
+  } finally {
+    await sql.end();
+  }
 }
 
 export const test = base.extend<{ owner: Owner }>({
