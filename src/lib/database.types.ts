@@ -63,7 +63,15 @@ export type Database = {
           title?: string;
           visit_summary?: string | null;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: 'appointments_authorization_fkey';
+            columns: ['owner_id', 'authorization_id'];
+            isOneToOne: false;
+            referencedRelation: 'authorizations';
+            referencedColumns: ['owner_id', 'id'];
+          },
+        ];
       };
       authorizations: {
         Row: {
