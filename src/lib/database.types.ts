@@ -172,13 +172,6 @@ export type Database = {
             foreignKeyName: 'dose_schedules_stock_item_id_fkey';
             columns: ['stock_item_id'];
             isOneToOne: false;
-            referencedRelation: 'alerts';
-            referencedColumns: ['stock_item_id'];
-          },
-          {
-            foreignKeyName: 'dose_schedules_stock_item_id_fkey';
-            columns: ['stock_item_id'];
-            isOneToOne: false;
             referencedRelation: 'stock_items';
             referencedColumns: ['id'];
           },
@@ -264,13 +257,6 @@ export type Database = {
             foreignKeyName: 'doses_stock_item_id_fkey';
             columns: ['stock_item_id'];
             isOneToOne: false;
-            referencedRelation: 'alerts';
-            referencedColumns: ['stock_item_id'];
-          },
-          {
-            foreignKeyName: 'doses_stock_item_id_fkey';
-            columns: ['stock_item_id'];
-            isOneToOne: false;
             referencedRelation: 'stock_items';
             referencedColumns: ['id'];
           },
@@ -320,17 +306,26 @@ export type Database = {
             foreignKeyName: 'restocks_stock_item_id_fkey';
             columns: ['stock_item_id'];
             isOneToOne: false;
-            referencedRelation: 'alerts';
-            referencedColumns: ['stock_item_id'];
-          },
-          {
-            foreignKeyName: 'restocks_stock_item_id_fkey';
-            columns: ['stock_item_id'];
-            isOneToOne: false;
             referencedRelation: 'stock_items';
             referencedColumns: ['id'];
           },
         ];
+      };
+      settings: {
+        Row: {
+          authorization_lead_days: number[];
+          owner_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          authorization_lead_days?: number[];
+          owner_id?: string;
+        };
+        Update: {
+          authorization_lead_days?: number[];
+          owner_id?: string;
+        };
+        Relationships: [];
       };
       stock_counts: {
         Row: {
@@ -359,13 +354,6 @@ export type Database = {
           stock_item_id?: string;
         };
         Relationships: [
-          {
-            foreignKeyName: 'stock_counts_stock_item_id_fkey';
-            columns: ['stock_item_id'];
-            isOneToOne: false;
-            referencedRelation: 'alerts';
-            referencedColumns: ['stock_item_id'];
-          },
           {
             foreignKeyName: 'stock_counts_stock_item_id_fkey';
             columns: ['stock_item_id'];
@@ -422,24 +410,14 @@ export type Database = {
     Views: {
       alerts: {
         Row: {
+          authorization_id: string | null;
           kind: string | null;
+          lead_days: number | null;
           message: string | null;
           needs_stock_count: boolean | null;
-          stock_item_id: string;
+          stock_item_id: string | null;
         };
         ComputedFields: never;
-        Insert: {
-          kind?: never;
-          message?: never;
-          needs_stock_count?: never;
-          stock_item_id?: string | null;
-        };
-        Update: {
-          kind?: never;
-          message?: never;
-          needs_stock_count?: never;
-          stock_item_id?: string | null;
-        };
         Relationships: [];
       };
     };
