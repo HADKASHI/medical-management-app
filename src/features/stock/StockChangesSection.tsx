@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react';
+import { todayInApp } from '@/lib/time';
 import { useAuthorizations } from '@/features/authorizations/authorizations';
 import { authorizationTitle } from '@/features/authorizations/labels';
 import { RestockForm } from './RestockForm';
@@ -6,11 +7,6 @@ import { useRecordRestock, useRecordStockCount } from './stockChanges';
 import type { StockItem } from './stockItems';
 
 const fieldClass = 'block w-full rounded border border-gray-300 px-3 py-2';
-
-/** Today's date on this device, as YYYY-MM-DD. */
-function localToday(): string {
-  return new Date().toLocaleDateString('en-CA');
-}
 
 /** A Stock Item's quantity, and the two ways the owner changes it: Restock and Stock Count. */
 export function StockChangesSection({ item }: { item: StockItem }) {
@@ -53,7 +49,7 @@ export function StockChangesSection({ item }: { item: StockItem }) {
       <RestockForm
         packSize={item.pack_size}
         unit={item.unit}
-        today={localToday()}
+        today={todayInApp()}
         authorizations={fillableUnder}
         submitting={restock.isPending}
         onSubmit={(input) => {
