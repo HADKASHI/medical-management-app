@@ -156,6 +156,16 @@ begin
 end;
 $$;
 
+-- Set a Stock Item's quantity behind the RPCs (quantity is written only by a
+-- taken Dose, a Restock or a Stock Count), e.g. to reach a negative quantity.
+create or replace function tests.set_quantity(stock_item uuid, quantity numeric)
+returns void
+language sql
+security definer
+as $$
+  update public.stock_items set quantity = set_quantity.quantity where id = set_quantity.stock_item;
+$$;
+
 -- One minute of the per-minute job at the given time, run as the cron job's
 -- role. Returns to the owner afterwards so the test keeps reading under RLS.
 create or replace function tests.tick_at(at timestamptz)

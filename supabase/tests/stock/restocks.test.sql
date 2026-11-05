@@ -33,7 +33,8 @@ select throws_ok(
 );
 
 -- a Restock entered as 2 packs of 30 adds 60 units
-update public.stock_items set quantity = 4, pack_size = 30
+select tests.set_quantity(current_setting('test.item')::uuid, 4);
+update public.stock_items set pack_size = 30
 where id = current_setting('test.item')::uuid;
 
 select results_eq(

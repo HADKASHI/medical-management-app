@@ -37,9 +37,10 @@ select tests.as_owner();
 select set_config('test.medication_id', (select id::text from public.stock_items), true);
 select tests.as_stranger();
 
-select is_empty(
-  $$ select id from public.archive_stock_item(current_setting('test.medication_id')::uuid)
-     where id is not null $$,
+select throws_ok(
+  $$ select public.archive_stock_item(current_setting('test.medication_id')::uuid) $$,
+  'P0002',
+  null,
   'a stranger cannot archive the owner''s Stock Item'
 );
 
@@ -94,7 +95,8 @@ select results_eq(
 
 -- quantity may be negative
 select results_eq(
-  $$ update public.stock_items set quantity = -2.5 where name = 'Medication B' returning quantity $$,
+  $$ insert into public.stock_items (name, kind, unit, quantity)
+     values ('Medication N', 'medication', 'pill', -2.5) returning quantity $$,
   $$ values (-2.5::numeric) $$,
   'quantity may be negative'
 );

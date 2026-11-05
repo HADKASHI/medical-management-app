@@ -22,7 +22,7 @@ select results_eq(
 );
 
 -- a Stock Count from a negative quantity works
-update public.stock_items set quantity = -2.5 where id = current_setting('test.item')::uuid;
+select tests.set_quantity(current_setting('test.item')::uuid, -2.5);
 
 select results_eq(
   $$ select counted_quantity, previous_quantity from public.record_stock_count(
