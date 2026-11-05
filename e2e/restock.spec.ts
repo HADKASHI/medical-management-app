@@ -22,7 +22,7 @@ test('a Restock in packs raises the shown stock and clears a Low Stock Alert', a
   await page.getByRole('link', { name: 'Home' }).click();
   await page.getByRole('link', { name: 'Alerts' }).click();
   const alert = page.getByRole('list', { name: 'Alerts' }).getByRole('link', {
-    name: `${name}: 4 pill left`,
+    name: `${name}: 4 pills left`,
   });
   await expect(alert).toBeVisible();
   await alert.click();
