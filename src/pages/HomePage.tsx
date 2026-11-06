@@ -1,0 +1,30 @@
+import { Link } from 'react-router';
+
+export function HomePage() {
+  return (
+    <main className="mx-auto max-w-xl space-y-4 p-4">
+      <h1 className="text-2xl font-semibold">Medical Management</h1>
+      <Link to="/alerts" className="block underline">
+        Alerts
+      </Link>
+      <Link to="/due-doses" className="block underline">
+        Due Doses
+      </Link>
+      <Link to="/stock" className="block underline">
+        Stock
+      </Link>
+      <Link to="/appointments" className="block underline">
+        Appointments
+      </Link>
+      <Link to="/authorizations" className="block underline">
+        Authorizations
+      </Link>
+      <Link to="/reports" className="block underline">
+        Reports
+      </Link>
+      <Link to="/settings" className="block underline">
+        Settings
+      </Link>
+    </main>
+  );
+}
