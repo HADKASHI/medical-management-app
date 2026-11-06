@@ -1,7 +1,7 @@
 -- Confirming Doses: set_dose_status() and take_doses() change a Dose's status
 -- and the Stock Item's quantity together; moving out of taken gives the Units back.
 begin;
-select plan(16);
+select plan(15);
 
 select tests.as_owner();
 select tests.at('2026-01-05 07:00 Asia/Jerusalem');
@@ -54,15 +54,6 @@ select results_eq(
   'select quantity from item_quantity',
   $$ values (10::numeric) $$,
   'skipping a Dose leaves quantity unchanged'
-);
-
--- skipping a taken Dose gives its units back
-select public.set_dose_status(current_setting('test.evening')::uuid, 'taken');
-select public.set_dose_status(current_setting('test.evening')::uuid, 'skipped');
-select results_eq(
-  'select quantity from item_quantity',
-  $$ values (10::numeric) $$,
-  'skipping a taken Dose gives its units back'
 );
 
 select throws_ok(

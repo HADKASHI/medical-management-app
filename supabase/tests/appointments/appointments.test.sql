@@ -119,9 +119,10 @@ select is_empty(
   'a stranger sees none of the owner''s Appointments'
 );
 
-select is_empty(
-  $$ select id from public.cancel_appointment(current_setting('test.copy')::uuid)
-     where id is not null $$,
+select throws_ok(
+  $$ select public.cancel_appointment(current_setting('test.copy')::uuid) $$,
+  'P0002',
+  null,
   'a stranger cannot cancel the owner''s Appointment'
 );
 

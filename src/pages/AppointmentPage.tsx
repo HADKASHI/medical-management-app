@@ -12,10 +12,10 @@ import {
 } from '@/features/appointments/appointments';
 import { formatDateTime, fromLocalInput, toLocalInput } from '@/features/appointments/dateTime';
 import { useAuthorizations } from '@/features/authorizations/authorizations';
+import { addAppWeeks } from '@/lib/time';
 
 const fieldClass = 'block w-full rounded border border-gray-300 px-3 py-2';
 const buttonClass = 'rounded border border-gray-300 px-4 py-2 disabled:opacity-50';
-const WEEK_MS = 7 * 24 * 3_600_000;
 
 /**
  * Create an Appointment (`/appointments/new`), or edit, cancel, duplicate,
@@ -150,7 +150,8 @@ function VisitSummarySection({ appointment }: { appointment: Appointment }) {
 function DuplicateSection({ appointment }: { appointment: Appointment }) {
   const navigate = useNavigate();
   const duplicate = useDuplicateAppointment();
-  const later = (iso: string) => new Date(new Date(iso).getTime() + WEEK_MS).toISOString();
+  // the same Israel wall-clock time a week later, even across a daylight-saving change
+  const later = (iso: string) => addAppWeeks(iso, 1);
   const [startsAt, setStartsAt] = useState(toLocalInput(later(appointment.starts_at)));
   const [endsAt, setEndsAt] = useState(toLocalInput(later(appointment.ends_at)));
   const [invalid, setInvalid] = useState<string | null>(null);

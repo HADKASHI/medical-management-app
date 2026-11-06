@@ -7,20 +7,14 @@ import {
   type DueDose,
   type DoseStatus,
 } from '@/features/doses/dueDoses';
+import { formatInApp } from '@/lib/time';
 
 const buttonClass = 'rounded border border-gray-300 px-3 py-1 disabled:opacity-50';
 
-/** A Dose's due time on the owner's Asia/Jerusalem wall clock. */
+/** A Dose's due time on the owner's Israel wall clock: "Mon 5 Jan, 08:00". */
 function formatDueAt(dueAt: string | null): string {
   if (!dueAt) return 'As Needed';
-  return new Date(dueAt).toLocaleString('en-GB', {
-    timeZone: 'Asia/Jerusalem',
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  return formatInApp(dueAt, 'EEE d MMM, HH:mm');
 }
 
 /** Every pending Dose, each with Taken / Skip, plus All taken (the Dose Reminder's target). */

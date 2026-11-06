@@ -169,11 +169,11 @@ export type Database = {
         };
         Relationships: [
           {
-            foreignKeyName: 'dose_schedules_stock_item_id_fkey';
-            columns: ['stock_item_id'];
+            foreignKeyName: 'dose_schedules_stock_item_fkey';
+            columns: ['owner_id', 'stock_item_id'];
             isOneToOne: false;
             referencedRelation: 'stock_items';
-            referencedColumns: ['id'];
+            referencedColumns: ['owner_id', 'id'];
           },
         ];
       };
@@ -202,11 +202,11 @@ export type Database = {
         };
         Relationships: [
           {
-            foreignKeyName: 'dose_times_dose_schedule_id_fkey';
-            columns: ['dose_schedule_id'];
+            foreignKeyName: 'dose_times_dose_schedule_fkey';
+            columns: ['owner_id', 'dose_schedule_id'];
             isOneToOne: false;
             referencedRelation: 'dose_schedules';
-            referencedColumns: ['id'];
+            referencedColumns: ['owner_id', 'id'];
           },
         ];
       };
@@ -247,18 +247,18 @@ export type Database = {
         };
         Relationships: [
           {
-            foreignKeyName: 'doses_dose_schedule_id_fkey';
-            columns: ['dose_schedule_id'];
+            foreignKeyName: 'doses_dose_schedule_fkey';
+            columns: ['owner_id', 'dose_schedule_id'];
             isOneToOne: false;
             referencedRelation: 'dose_schedules';
-            referencedColumns: ['id'];
+            referencedColumns: ['owner_id', 'id'];
           },
           {
-            foreignKeyName: 'doses_stock_item_id_fkey';
-            columns: ['stock_item_id'];
+            foreignKeyName: 'doses_stock_item_fkey';
+            columns: ['owner_id', 'stock_item_id'];
             isOneToOne: false;
             referencedRelation: 'stock_items';
-            referencedColumns: ['id'];
+            referencedColumns: ['owner_id', 'id'];
           },
         ];
       };
@@ -303,11 +303,11 @@ export type Database = {
             referencedColumns: ['owner_id', 'id'];
           },
           {
-            foreignKeyName: 'restocks_stock_item_id_fkey';
-            columns: ['stock_item_id'];
+            foreignKeyName: 'restocks_stock_item_fkey';
+            columns: ['owner_id', 'stock_item_id'];
             isOneToOne: false;
             referencedRelation: 'stock_items';
-            referencedColumns: ['id'];
+            referencedColumns: ['owner_id', 'id'];
           },
         ];
       };
@@ -355,11 +355,11 @@ export type Database = {
         };
         Relationships: [
           {
-            foreignKeyName: 'stock_counts_stock_item_id_fkey';
-            columns: ['stock_item_id'];
+            foreignKeyName: 'stock_counts_stock_item_fkey';
+            columns: ['owner_id', 'stock_item_id'];
             isOneToOne: false;
             referencedRelation: 'stock_items';
-            referencedColumns: ['id'];
+            referencedColumns: ['owner_id', 'id'];
           },
         ];
       };

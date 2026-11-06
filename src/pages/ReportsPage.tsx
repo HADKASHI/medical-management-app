@@ -5,17 +5,11 @@ import { useMonthDoses, type MonthDose, type MonthDoseReport } from '@/features/
 import { useRenewalChains, type RenewalChain } from '@/features/reports/renewals';
 import { useVisits, type Visit } from '@/features/reports/visits';
 import { useStockItems, type StockItem } from '@/features/stock/stockItems';
-
-const TIME_ZONE = 'Asia/Jerusalem';
-
-/** Today in the owner's time zone: "2026-02-10". */
-function localToday() {
-  return new Intl.DateTimeFormat('en-CA', { timeZone: TIME_ZONE }).format(new Date());
-}
+import { formatInApp, todayInApp } from '@/lib/time';
 
 /** The first of the current month in the owner's time zone: "2026-02-01". */
 function currentMonth() {
-  return `${localToday().slice(0, 7)}-01`;
+  return `${todayInApp().slice(0, 7)}-01`;
 }
 
 /** The first of the month `delta` months from `month` ("YYYY-MM-01"). */
@@ -355,14 +349,9 @@ function MedicationCard({
   );
 }
 
+/** A timestamp in the owner's time zone: "3 Feb, 08:05". */
 function formatLocalTime(at: string) {
-  return new Intl.DateTimeFormat('en-GB', {
-    timeZone: TIME_ZONE,
-    day: 'numeric',
-    month: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(new Date(at));
+  return formatInApp(at, 'd MMM, HH:mm');
 }
 
 /** "2026-02-03" as "3 Feb", or with `withYear` "3 Feb 2026". */
@@ -389,7 +378,7 @@ function RenewalsTab() {
   const { data: items, error: itemsError } = useStockItems();
   const { data: chains, isPending, error } = useRenewalChains();
   const [itemId, setItemId] = useState('all');
-  const today = localToday();
+  const today = todayInApp();
   const shown = (chains ?? []).filter(
     (chain) => itemId === 'all' || chain.links.some((link) => link.stock_item_id === itemId),
   );
@@ -457,12 +446,7 @@ function RenewalCard({ chain, today }: { chain: RenewalChain; today: string }) {
 
 /** A timestamp's date in the owner's time zone: "5 Feb 2026". */
 function formatVisitDate(at: string) {
-  return new Intl.DateTimeFormat('en-GB', {
-    timeZone: TIME_ZONE,
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  }).format(new Date(at));
+  return formatInApp(at, 'd MMM yyyy');
 }
 
 function VisitsTab() {

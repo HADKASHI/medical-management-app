@@ -95,6 +95,8 @@ If two Dose Times of one version fall on the same instant (a spring-forward time
 | taken_at | timestamptz, null | |
 | status_changed_at | timestamptz | |
 
+The owner may change a Dose's status only along these transitions: `pending` → `taken` or `skipped`, `skipped` → `taken`, `missed` → `taken` (a late fix) and `taken` → `pending` (undo of a just-taken Dose). A `skipped` or `missed` Dose is never reopened to `pending`, and only the confirmation window sets `missed`. An As Needed Dose can be logged only for an unarchived medication whose Dose Schedule version in force today is `as_needed`.
+
 Moving into or out of `taken` (including a late fix from `missed`) changes `stock_items.quantity` by `amount`. A Dose becomes `missed` when its confirmation window passes; the window is set in [alert-rules.md](alert-rules.md): the earlier of 24 hours after `due_at` or the next Dose of the same Stock Item.
 
 ## Authorizations
@@ -136,6 +138,10 @@ Moving into or out of `taken` (including a late fix from `missed`) changes `stoc
 | invite_sequence | int, default 0 | increased on every update or cancellation sent |
 
 Status is derived: *cancelled* if `cancelled_at` is set, otherwise *done* once `ends_at` has passed, otherwise *scheduled*. The Work Calendar Invite always uses the neutral title "Personal appointment" and blocks `starts_at − buffer_before` to `ends_at + buffer_after`.
+
+## Write paths
+
+Events are written only through their database functions, never as direct table writes from the client: `doses`, `restocks`, `stock_counts`, `dose_schedules` and `dose_times` take no direct inserts, updates or deletes, and neither do `stock_items.quantity` (set directly only when the Stock Item is created) and `archived_at`, `authorizations.archived_at`, and `appointments.cancelled_at` and `invite_sequence`. Each of those functions checks that the caller is the row's owner with a TOTP-verified (aal2) session. Every reference between owned rows is a composite `(owner_id, id)` key, so a row can only point at the same owner's row.
 
 ## History and reports
 

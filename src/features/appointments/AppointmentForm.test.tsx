@@ -56,8 +56,9 @@ describe('Appointment form', () => {
 
     expect(onSubmit).toHaveBeenCalledWith({
       title: 'Physiotherapy',
-      starts_at: new Date('2026-03-12T10:00').toISOString(),
-      ends_at: new Date('2026-03-12T10:45').toISOString(),
+      // read as Israel time (UTC+2 in March), whatever the device's zone
+      starts_at: '2026-03-12T08:00:00.000Z',
+      ends_at: '2026-03-12T08:45:00.000Z',
       provider: 'Clinic A',
       location: 'Example Street 1',
       notes: 'Bring the referral',

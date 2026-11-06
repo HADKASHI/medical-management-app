@@ -42,7 +42,11 @@ test('an expiring Authorization is in the Alerts list until the lead times exclu
   }
 });
 
-test('the owner adds a backup authenticator in Settings', async ({ page, owner }) => {
+test('the owner adds a backup authenticator in Settings, then signs in with it', async ({
+  page,
+  browser,
+  owner,
+}) => {
   await signIn(page, owner);
   await page.goto('/settings');
 
@@ -54,4 +58,12 @@ test('the owner adds a backup authenticator in Settings', async ({ page, owner }
   await page.getByLabel('Authentication code').fill(backup.generate());
   await page.getByRole('button', { name: 'Verify backup' }).click();
   await expect(page.getByText('Main and backup authenticators are set up.')).toBeVisible();
+
+  // A fresh browser, as on a new phone with only the backup authenticator.
+  const context = await browser.newContext();
+  try {
+    await signIn(await context.newPage(), { ...owner, totpCode: () => backup.generate() });
+  } finally {
+    await context.close();
+  }
 });
